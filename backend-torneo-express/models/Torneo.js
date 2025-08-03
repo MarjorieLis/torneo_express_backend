@@ -1,4 +1,3 @@
-// models/Torneo.js
 const mongoose = require('mongoose');
 
 const torneoSchema = new mongoose.Schema({
@@ -26,6 +25,11 @@ const torneoSchema = new mongoose.Schema({
     type: String, 
     enum: ['activo', 'suspendido', 'cancelado', 'finalizado'], 
     default: 'activo' 
+  },
+  creador: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
   },
   equipos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Equipo' }],
   partidos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Partido' }],
