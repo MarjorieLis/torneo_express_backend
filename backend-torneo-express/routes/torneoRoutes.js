@@ -16,8 +16,7 @@ const {
 // Rutas protegidas
 router.post('/', auth, crearTorneo);
 router.get('/', auth, obtenerTorneos);
-
-//router.put('/:id', auth, editarTorneo);
+router.put('/:id', auth, editarTorneo);
 //router.get('/historial', auth, obtenerHistorial);  // Debe ir antes que '/:id'
 
 router.put('/:id/suspender', auth, suspenderTorneo);
