@@ -15,11 +15,12 @@ const {
 
 // Rutas protegidas
 router.post('/', auth, crearTorneo);
-//router.get('/', auth, obtenerTorneos);
-//router.get('/historial', auth, obtenerHistorial);  // Debe ir antes que '/:id'
-//router.get('/:id', auth, obtenerTorneo);
+router.get('/', auth, obtenerTorneos);
+
 //router.put('/:id', auth, editarTorneo);
-//router.put('/:id/suspender', auth, suspenderTorneo);
-//router.put('/:id/cancelar', auth, cancelarTorneo);
+//router.get('/historial', auth, obtenerHistorial);  // Debe ir antes que '/:id'
+
+router.put('/:id/suspender', auth, suspenderTorneo);
+router.put('/:id/cancelar', auth, cancelarTorneo);
 
 module.exports = router;
