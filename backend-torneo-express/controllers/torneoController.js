@@ -1,15 +1,19 @@
+// controllers/torneoController.js
 const mongoose = require('mongoose');
 const Torneo = require('../models/Torneo');
 const Partido = require('../models/Partido');
+const Jugador = require('../models/Jugador');
+const Equipo = require('../models/Equipo');
 
 // ✅ Verifica que los modelos se importen correctamente
 console.log('Torneo model loaded:', Torneo ? '✅' : '❌');
 console.log('Partido model loaded:', Partido ? '✅' : '❌');
 
-// Crear nuevo torneo
+/**
+ * Crear nuevo torneo
+ */
 exports.crearTorneo = async (req, res) => {
   const { nombre, disciplina, fechaInicio, fechaFin, maxEquipos, reglas, formato } = req.body;
-
   try {
     const existe = await Torneo.findOne({ nombre });
     if (existe) {
@@ -19,35 +23,21 @@ exports.crearTorneo = async (req, res) => {
       });
     }
 
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
-    if (inicio >= fin) {
-      return res.status(400).json({
-        success: false,
-        message: 'La fecha de inicio debe ser anterior a la de fin'
-      });
-    }
-
-    const nuevoTorneo = new Torneo({
+    const torneo = new Torneo({
       nombre,
       disciplina,
-      fechaInicio: inicio,
-      fechaFin: fin,
+      fechaInicio,
+      fechaFin,
       maxEquipos,
       reglas,
       formato,
       creador: req.user.id
     });
 
-    await nuevoTorneo.save();
-
-    res.status(201).json({
-      success: true,
-      torneo: nuevoTorneo
-    });
-
+    await torneo.save();
+    res.status(201).json({ success: true, torneo });
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error al crear torneo:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
@@ -55,16 +45,15 @@ exports.crearTorneo = async (req, res) => {
   }
 };
 
-// Obtener torneos del organizador autenticado
+/**
+ * Obtener todos los torneos
+ */
 exports.obtenerTorneos = async (req, res) => {
   try {
-    const torneos = await Torneo.find({ creador: req.user.id }).sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      torneos
-    });
+    const torneos = await Torneo.find().sort({ createdAt: -1 });
+    res.json({ success: true, torneos });
   } catch (err) {
-    console.error('Error al obtener torneos:', err.message);
+    console.error('❌ Error al obtener torneos:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
@@ -72,8 +61,32 @@ exports.obtenerTorneos = async (req, res) => {
   }
 };
 
-// ✅ Obtener torneo por ID (arreglo agregado)
+/**
+ * Obtener un torneo por ID
+ */
 exports.obtenerTorneo = async (req, res) => {
+  try {
+    const torneo = await Torneo.findById(req.params.id);
+    if (!torneo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Torneo no encontrado'
+      });
+    }
+    res.json({ success: true, torneo });
+  } catch (err) {
+    console.error('❌ Error al obtener torneo:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
+};
+
+/**
+ * Editar torneo
+ */
+exports.editarTorneo = async (req, res) => {
   try {
     const torneo = await Torneo.findById(req.params.id);
     if (!torneo) {
@@ -86,73 +99,26 @@ exports.obtenerTorneo = async (req, res) => {
     if (torneo.creador.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: 'No tienes permiso para ver este torneo'
-      });
-    }
-
-    res.json({
-      success: true,
-      torneo
-    });
-  } catch (err) {
-    console.error('❌ Error al obtener torneo:', err.message);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener torneo'
-    });
-  }
-};
-
-// Editar torneo (RF-006)
-exports.editarTorneo = async (req, res) => {
-  const { nombre, disciplina, fechaInicio, fechaFin, maxEquipos, reglas, formato } = req.body;
-
-  try {
-    let torneo = await Torneo.findById(req.params.id);
-    if (!torneo) {
-      return res.status(404).json({ message: 'Torneo no encontrado' });
-    }
-
-    if (torneo.creador.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
         message: 'No tienes permiso para editar este torneo'
       });
     }
 
-    const hoy = new Date();
-    if (new Date(torneo.fechaInicio) < hoy) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se puede editar el nombre o fechas de un torneo ya iniciado'
-      });
-    }
-
-    torneo.nombre = nombre;
-    torneo.disciplina = disciplina;
-    torneo.fechaInicio = new Date(fechaInicio);
-    torneo.fechaFin = new Date(fechaFin);
-    torneo.maxEquipos = maxEquipos;
-    torneo.reglas = reglas;
-    torneo.formato = formato;
-
+    Object.assign(torneo, req.body);
     await torneo.save();
 
-    res.json({
-      success: true,
-      message: 'Torneo actualizado correctamente',
-      torneo
-    });
+    res.json({ success: true, torneo });
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error al editar torneo:', err.message);
     res.status(500).json({
       success: false,
-      message: 'Error al editar torneo'
+      message: 'Error en el servidor'
     });
   }
 };
 
-// Suspender torneo (RF-007)
+/**
+ * Suspender torneo
+ */
 exports.suspenderTorneo = async (req, res) => {
   try {
     const torneo = await Torneo.findById(req.params.id);
@@ -170,21 +136,10 @@ exports.suspenderTorneo = async (req, res) => {
       });
     }
 
-    if (torneo.estado === 'cancelado') {
-      return res.status(400).json({
-        success: false,
-        message: 'No se puede suspender un torneo cancelado'
-      });
-    }
-
     torneo.estado = 'suspendido';
     await torneo.save();
 
-    res.json({
-      success: true,
-      message: 'Torneo suspendido correctamente',
-      torneo
-    });
+    res.json({ success: true, torneo });
   } catch (err) {
     console.error('❌ Error al suspender torneo:', err.message);
     res.status(500).json({
@@ -194,7 +149,9 @@ exports.suspenderTorneo = async (req, res) => {
   }
 };
 
-// Cancelar torneo (RF-008)
+/**
+ * Cancelar torneo
+ */
 exports.cancelarTorneo = async (req, res) => {
   try {
     const torneo = await Torneo.findById(req.params.id);
@@ -212,21 +169,10 @@ exports.cancelarTorneo = async (req, res) => {
       });
     }
 
-    if (torneo.estado === 'finalizado' || torneo.estado === 'cancelado') {
-      return res.status(400).json({
-        success: false,
-        message: 'Este torneo ya está cancelado o finalizado'
-      });
-    }
-
     torneo.estado = 'cancelado';
     await torneo.save();
 
-    res.json({
-      success: true,
-      message: 'Torneo cancelado correctamente',
-      torneo
-    });
+    res.json({ success: true, torneo });
   } catch (err) {
     console.error('❌ Error al cancelar torneo:', err.message);
     res.status(500).json({
@@ -236,10 +182,11 @@ exports.cancelarTorneo = async (req, res) => {
   }
 };
 
-// ✅ Nueva función: Programar partidos (RF-004)
+/**
+ * Programar partidos
+ */
 exports.programarPartidos = async (req, res) => {
   const { torneoId, modo, partidos } = req.body;
-
   try {
     const torneo = await Torneo.findById(torneoId);
     if (!torneo) {
@@ -257,9 +204,23 @@ exports.programarPartidos = async (req, res) => {
     }
 
     let partidosCreados = [];
-
     if (modo === 'automatica') {
-      partidosCreados = await generarCalendarioAutomatico(torneo, torneo.equipos);
+      const equipos = torneo.equipos;
+      for (let i = 0; i < equipos.length; i++) {
+        for (let j = i + 1; j < equipos.length; j++) {
+          const partido = new Partido({
+            torneoId,
+            equipoLocal: equipos[i],
+            equipoVisitante: equipos[j],
+            fecha: new Date(),
+            hora: '10:00',
+            lugar: 'Cancha Principal',
+            estado: 'programado'
+          });
+          await partido.save();
+          partidosCreados.push(partido);
+        }
+      }
     } else {
       for (let p of partidos) {
         const partido = new Partido({
@@ -290,43 +251,13 @@ exports.programarPartidos = async (req, res) => {
   }
 };
 
-// ✅ Lógica de generación automática
-const generarCalendarioAutomatico = async (torneo, equipos) => {
-  const partidos = [];
-  const dias = Math.ceil(equipos.length * (equipos.length - 1) / 2 / 3);
-  let fecha = new Date(torneo.fechaInicio);
-  let index = 0;
-
-  for (let i = 0; i < equipos.length; i++) {
-    for (let j = i + 1; j < equipos.length; j++) {
-      const dia = Math.floor(index / 3);
-      const hora = (index % 3) * 2 + 18;
-
-      const partido = new Partido({
-        torneoId: torneo._id,
-        equipoLocal: equipos[i],
-        equipoVisitante: equipos[j],
-        fecha: new Date(fecha.getTime() + dia * 24 * 60 * 60 * 0),
-        hora: { hour: hora, minute: 0 },
-        lugar: `Cancha ${index % 3 + 1}`,
-        estado: 'programado',
-      });
-
-      await partido.save();
-      partidos.push(partido);
-      index++;
-    }
-  }
-
-  return partidos;
-};
-
-// RF-013: Obtener torneos disponibles para jugadores
-// controllers/torneoController.js
+/**
+ * ✅ Obtener torneos disponibles para inscripción (jugadores)
+ */
 exports.obtenerTorneosDisponibles = async (req, res) => {
   try {
     const torneos = await Torneo.find({
-      estado: { $in: ['activo', 'en curso'] }
+      estado: 'activo'
     })
     .select('nombre disciplina fechaInicio fechaFin maxEquipos reglas formato estado equipos')
     .sort({ createdAt: -1 });
@@ -343,11 +274,80 @@ exports.obtenerTorneosDisponibles = async (req, res) => {
         reglas: torneo.reglas,
         formato: torneo.formato,
         estado: torneo.estado,
-        equipos: torneo.equipos
+        equipos: torneo.equipos.map(e => e.toString())
       }))
     });
   } catch (err) {
     console.error('❌ Error al obtener torneos disponibles:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
+};
+
+/**
+ * ✅ Crear equipo (inscripción)
+ */
+exports.crearEquipo = async (req, res) => {
+  const { nombre, torneoId, capitánId, jugadorIds } = req.body;
+
+  try {
+    const torneo = await Torneo.findById(torneoId);
+    if (!torneo || torneo.estado !== 'activo') {
+      return res.status(400).json({
+        success: false,
+        message: 'Torneo no válido o no activo'
+      });
+    }
+
+    const capitán = await Jugador.findById(capitánId);
+    if (!capitán || capitán.equipoId) {
+      return res.status(400).json({
+        success: false,
+        message: 'El capitán no puede estar en otro equipo'
+      });
+    }
+
+    const jugadores = await Jugador.find({ _id: { $in: jugadorIds } });
+    const jugadoresEnEquipo = jugadores.filter(j => j.equipoId);
+    if (jugadoresEnEquipo.length > 0) {
+      const nombres = jugadoresEnEquipo.map(j => j.nombre_completo).join(', ');
+      return res.status(400).json({
+        success: false,
+        message: `Los siguientes jugadores ya pertenecen a un equipo: ${nombres}`
+      });
+    }
+
+    const equipo = new Equipo({
+      nombre,
+      torneoId,
+      capitánId,
+      jugadorIds
+    });
+
+    await equipo.save();
+
+    await Jugador.updateMany(
+      { _id: { $in: [...jugadorIds, capitánId] } },
+      { $set: { equipoId: equipo._id } }
+    );
+
+    torneo.equipos.push(equipo._id);
+    await torneo.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Equipo creado e inscrito correctamente',
+      equipo: {
+        id: equipo._id,
+        nombre: equipo.nombre,
+        capitánId: equipo.capitánId,
+        jugadorIds: equipo.jugadorIds
+      }
+    });
+  } catch (err) {
+    console.error('❌ Error al crear equipo:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'

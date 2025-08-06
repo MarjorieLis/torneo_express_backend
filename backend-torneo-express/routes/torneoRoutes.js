@@ -12,7 +12,8 @@ const {
   suspenderTorneo,
   cancelarTorneo,
   programarPartidos,
-  obtenerTorneosDisponibles
+  obtenerTorneosDisponibles,
+  crearEquipo
 } = require('../controllers/torneoController');
 
 // 🔍 Depuración: Verifica que cada función sea válida
@@ -36,6 +37,7 @@ router.get('/', auth, obtenerTorneos);
 
 //Ruta para jugadores: torneos disponibles
 router.get('/disponibles', auth, obtenerTorneosDisponibles);
+router.post('/equipos', auth, crearEquipo);
 
 router.get('/:id', auth, obtenerTorneo);
 router.put('/:id', auth, editarTorneo);
