@@ -321,16 +321,14 @@ const generarCalendarioAutomatico = async (torneo, equipos) => {
   return partidos;
 };
 
-// controllers/torneoController.js
-
 // RF-013: Obtener torneos disponibles para jugadores
+// controllers/torneoController.js
 exports.obtenerTorneosDisponibles = async (req, res) => {
   try {
-    // Buscar torneos activos (no suspendidos ni cancelados)
     const torneos = await Torneo.find({
       estado: { $in: ['activo', 'en curso'] }
     })
-    .select('nombre disciplina fechaInicio fechaFin maxEquipos reglas formato estado equipos creador')
+    .select('nombre disciplina fechaInicio fechaFin maxEquipos reglas formato estado equipos')
     .sort({ createdAt: -1 });
 
     res.json({
@@ -345,12 +343,11 @@ exports.obtenerTorneosDisponibles = async (req, res) => {
         reglas: torneo.reglas,
         formato: torneo.formato,
         estado: torneo.estado,
-        equipos: torneo.equipos,
-        creador: torneo.creador
+        equipos: torneo.equipos
       }))
     });
   } catch (err) {
-    console.error('Error al obtener torneos disponibles:', err.message);
+    console.error('❌ Error al obtener torneos disponibles:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'

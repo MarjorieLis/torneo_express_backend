@@ -33,11 +33,16 @@ if (typeof programarPartidos !== 'function') {
 // Rutas protegidas
 router.post('/', auth, crearTorneo);
 router.get('/', auth, obtenerTorneos);
+
+//Ruta para jugadores: torneos disponibles
+router.get('/disponibles', auth, obtenerTorneosDisponibles);
+
 router.get('/:id', auth, obtenerTorneo);
 router.put('/:id', auth, editarTorneo);
 router.put('/:id/suspender', auth, suspenderTorneo);
 router.put('/:id/cancelar', auth, cancelarTorneo);
 router.post('/partidos/programar', auth, programarPartidos);
-router.get('/disponibles', auth, obtenerTorneosDisponibles);
+
+
 
 module.exports = router;

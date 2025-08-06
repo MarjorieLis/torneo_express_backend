@@ -7,8 +7,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://frontend-torneo-express.com'],
-  credentials: true,
+origin: ['http://localhost:3000', 'https://frontend-torneo-express.com'],  credentials: true,
 }));
 app.use(express.json());
 
