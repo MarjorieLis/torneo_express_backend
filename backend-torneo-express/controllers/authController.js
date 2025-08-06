@@ -7,7 +7,7 @@ const User = require('../models/User');
  * Registro de usuario
  */
 exports.register = async (req, res) => {
-  const { nombre, email, password, rol } = req.body;
+  const { nombre, email, password, rol, jugadorInfo } = req.body;
 
   try {
     // Verificar si el usuario ya existe
@@ -28,7 +28,24 @@ exports.register = async (req, res) => {
     }
 
     // Crear nuevo usuario
-    user = new User({ nombre, email, password, rol });
+    user = new User({ 
+      nombre, 
+      email, 
+      password, 
+      rol 
+    });
+
+    // ✅ Añadir información del jugador solo si el rol es 'jugador'
+    if (rol === 'jugador' && jugadorInfo) {
+      user.jugadorInfo = {
+        edad: jugadorInfo.edad,
+        posicionPrincipal: jugadorInfo.posicionPrincipal,
+        posicionSecundaria: jugadorInfo.posicionSecundaria,
+        numeroCamiseta: jugadorInfo.numeroCamiseta || null,
+        genero: jugadorInfo.genero || 'masculino',
+        telefono: jugadorInfo.telefono || ''
+      };
+    }
 
     // Hashear contraseña
     const salt = await bcrypt.genSalt(10);
@@ -51,7 +68,8 @@ exports.register = async (req, res) => {
         nombre: user.nombre,
         email: user.email,
         rol: user.rol,
-        campus: user.campus
+        campus: user.campus,
+        jugadorInfo: user.jugadorInfo // ✅ Enviar al frontend
       }
     });
 
@@ -102,7 +120,8 @@ exports.login = async (req, res) => {
         nombre: user.nombre,
         email: user.email,
         rol: user.rol,
-        campus: user.campus
+        campus: user.campus,
+        jugadorInfo: user.jugadorInfo // ✅ Incluir en el login
       }
     });
 

@@ -26,6 +26,15 @@ const userSchema = new mongoose.Schema({
     type: String, 
     default: 'UIDE' 
   },
+  // ✅ Información adicional para jugadores
+  jugadorInfo: {
+    edad: { type: Number },
+    posicionPrincipal: { type: String },
+    posicionSecundaria: { type: String },
+    numeroCamiseta: { type: Number },
+    genero: { type: String, enum: ['masculino', 'femenino'] },
+    telefono: { type: String }
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 
