@@ -11,7 +11,8 @@ const {
   editarTorneo,
   suspenderTorneo,
   cancelarTorneo,
-  programarPartidos
+  programarPartidos,
+  obtenerTorneosDisponibles
 } = require('../controllers/torneoController');
 
 // 🔍 Depuración: Verifica que cada función sea válida
@@ -22,6 +23,7 @@ console.log('editarTorneo:', typeof editarTorneo);
 console.log('suspenderTorneo:', typeof suspenderTorneo);
 console.log('cancelarTorneo:', typeof cancelarTorneo);
 console.log('programarPartidos:', typeof programarPartidos);
+
 
 // Si alguna es undefined, lanza un error
 if (typeof programarPartidos !== 'function') {
@@ -36,5 +38,6 @@ router.put('/:id', auth, editarTorneo);
 router.put('/:id/suspender', auth, suspenderTorneo);
 router.put('/:id/cancelar', auth, cancelarTorneo);
 router.post('/partidos/programar', auth, programarPartidos);
+router.get('/disponibles', auth, obtenerTorneosDisponibles);
 
 module.exports = router;
