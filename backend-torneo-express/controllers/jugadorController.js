@@ -1,4 +1,3 @@
-// controllers/jugadorController.js
 const Jugador = require('../models/Jugador');
 
 /**
@@ -47,8 +46,12 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
       message: 'Error en el servidor'
     });
   }
+};
 
-  exports.obtenerJugadoresDisponibles = async (req, res) => {
+/**
+ * ✅ Obtener jugadores disponibles (sin equipo)
+ */
+exports.obtenerJugadoresDisponibles = async (req, res) => {
   try {
     const jugadores = await Jugador.find({ equipoId: null })
       .select('nombre_completo posicion_principal posicion_secundaria numero_camiseta')
@@ -72,5 +75,4 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
       message: 'Error en el servidor'
     });
   }
-};
 };

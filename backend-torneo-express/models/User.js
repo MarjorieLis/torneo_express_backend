@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
   },
   // ✅ Información adicional para jugadores
   jugadorInfo: {
+    cedula: String,
     edad: { type: Number },
     posicionPrincipal: { type: String },
     posicionSecundaria: { type: String },
