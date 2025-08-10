@@ -1,4 +1,5 @@
-const Jugador = require('../models/Jugador');
+// controllers/jugadorController.js
+const User = require('../models/User'); // Usa User, no Jugador
 
 /**
  * Buscar jugador por cédula o correo institucional
@@ -13,14 +14,16 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
       });
     }
 
-    const jugador = await Jugador.findOne({
+    // ✅ Busca en jugadorInfo.cedula y en email
+    const user = await User.findOne({
+      rol: 'jugador',
       $or: [
-        { 'datosPersonales.cedula': query },
+        { 'jugadorInfo.cedula': query },
         { email: query }
       ]
-    }).select('nombre_completo email posicion_principal posicion_secundaria numero_camiseta equipoId');
+    }).select('nombre email jugadorInfo equipoId');
 
-    if (!jugador) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: 'Jugador no encontrado'
@@ -30,13 +33,17 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
     res.json({
       success: true,
       jugador: {
-        id: jugador._id,
-        nombre_completo: jugador.nombre_completo,
-        email: jugador.email,
-        posicion_principal: jugador.posicion_principal,
-        posicion_secundaria: jugador.posicion_secundaria,
-        numero_camiseta: jugador.numero_camiseta,
-        equipoId: jugador.equipoId ? jugador.equipoId.toString() : null
+        id: user._id,
+        nombre_completo: user.nombre,
+        email: user.email,
+        cedula: user.jugadorInfo?.cedula,
+        edad: user.jugadorInfo?.edad,
+        posicion_principal: user.jugadorInfo?.posicionPrincipal,
+        posicion_secundaria: user.jugadorInfo?.posicionSecundaria,
+        numero_camiseta: user.jugadorInfo?.numeroCamiseta,
+        genero: user.jugadorInfo?.genero,
+        telefono: user.jugadorInfo?.telefono,
+        equipoId: user.equipoId ? user.equipoId.toString() : null
       }
     });
   } catch (err) {
@@ -47,25 +54,29 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
     });
   }
 };
-
 /**
  * ✅ Obtener jugadores disponibles (sin equipo)
  */
 exports.obtenerJugadoresDisponibles = async (req, res) => {
   try {
-    const jugadores = await Jugador.find({ equipoId: null })
-      .select('nombre_completo posicion_principal posicion_secundaria numero_camiseta')
-      .limit(50);
+    const users = await User.find({
+      rol: 'jugador',
+      'equipoId': null
+    })
+    .select('nombre jugadorInfo')
+    .limit(50);
 
     res.json({
       success: true,
-      jugadores: jugadores.map(j => ({
-        id: j._id,
-        nombre_completo: j.nombre_completo,
-        posicion_principal: j.posicion_principal,
-        posicion_secundaria: j.posicion_secundaria,
-        numero_camiseta: j.numero_camiseta,
-        equipoId: j.equipoId ? j.equipoId.toString() : null
+      jugadores: users.map(u => ({
+        id: u._id,
+        nombre_completo: u.nombre,
+        posicion_principal: u.jugadorInfo?.posicionPrincipal,
+        posicion_secundaria: u.jugadorInfo?.posicionSecundaria,
+        numero_camiseta: u.jugadorInfo?.numeroCamiseta,
+        cedula: u.jugadorInfo?.cedula,
+        email: u.email,
+        equipoId: u.equipoId ? u.equipoId.toString() : null
       }))
     });
   } catch (err) {

@@ -38,6 +38,7 @@ exports.register = async (req, res) => {
     // ✅ Añadir información del jugador solo si el rol es 'jugador'
     if (rol === 'jugador' && jugadorInfo) {
       user.jugadorInfo = {
+        cedula: jugadorInfo.cedula,
         edad: jugadorInfo.edad,
         posicionPrincipal: jugadorInfo.posicionPrincipal,
         posicionSecundaria: jugadorInfo.posicionSecundaria,

@@ -3,7 +3,19 @@ const mongoose = require('mongoose');
 
 const jugadorSchema = new mongoose.Schema({
   nombre_completo: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true,
+    index: true
+  },
+  cedula: { // ✅ Nuevo campo: cédula
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
   edad: { type: Number, required: true },
   posicion_principal: { type: String, required: true },
   posicion_secundaria: { type: String },
