@@ -6,7 +6,7 @@ const { buscarJugadorPorCedulaOCorreo, obtenerJugadoresDisponibles } = require('
 // GET /api/jugadores/buscar?query=123456789
 router.get('/buscar', buscarJugadorPorCedulaOCorreo);
 
-// GET /api/jugadores/disponibles
+// ✅ NUEVO: GET /api/jugadores/disponibles
 router.get('/disponibles', obtenerJugadoresDisponibles);
 
 module.exports = router;
