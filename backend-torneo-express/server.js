@@ -28,6 +28,7 @@ app.use('/api/partidos', require('./routes/partidoRoutes'));
 app.use('/api/jugadores', require('./routes/jugadorRoutes'));
 app.use('/api/equipos', require('./routes/equipoRoutes'));
 
+
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('Torneo Express API - Backend');

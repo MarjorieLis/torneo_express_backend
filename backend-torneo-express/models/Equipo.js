@@ -2,7 +2,11 @@
 const mongoose = require('mongoose');
 
 const equipoSchema = new mongoose.Schema({
-  nombre: { type: String, required: true, trim: true },
+  nombre: { 
+    type: String, 
+    required: true, 
+    trim: true 
+  },
   torneoId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Torneo', 
@@ -10,14 +14,32 @@ const equipoSchema = new mongoose.Schema({
   },
   capitanId: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Jugador', 
+    ref: 'User', 
     required: true 
+  },
+  capitanNombre: { 
+    type: String, 
+    required: true, 
+    trim: true 
+  },
+  capitanTelefono: { 
+    type: String, 
+    required: true, 
+    trim: true 
   },
   jugadorIds: [{ 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Jugador' 
+    ref: 'User' 
   }],
-  createdAt: { type: Date, default: Date.now }
+  estado: { 
+    type: String, 
+    enum: ['pendiente', 'aprobado', 'rechazado'], 
+    default: 'pendiente' 
+  },
+  fechaRegistro: { 
+    type: Date, 
+    default: Date.now 
+  }
 });
 
 module.exports = mongoose.model('Equipo', equipoSchema);

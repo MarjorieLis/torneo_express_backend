@@ -8,8 +8,7 @@ exports.crearEquipo = async (req, res) => {
   try {
     const { nombre, torneoId, capitanId, capitanNombre, capitanTelefono, jugadorIds } = req.body;
 
-    // Validar campos obligatorios
-    if (!nombre || !torneoId || !capitanId || !capitanNombre || !jugadorIds || jugadorIds.length < 2) {
+    if (!nombre || !torneoId || !capitanId || !capitanNombre || !capitanTelefono || !jugadorIds || jugadorIds.length < 2) {
       return res.status(400).json({
         success: false,
         message: 'Faltan campos requeridos o cantidad mínima de jugadores'
@@ -22,7 +21,9 @@ exports.crearEquipo = async (req, res) => {
       capitanId,
       capitanNombre,
       capitanTelefono,
-      jugadorIds
+      jugadorIds,
+      estado: 'pendiente',
+      fechaRegistro: new Date()
     });
 
     await equipo.save();
@@ -33,11 +34,42 @@ exports.crearEquipo = async (req, res) => {
         id: equipo._id,
         nombre: equipo.nombre,
         capitanNombre: equipo.capitanNombre,
-        jugadorIds: equipo.jugadorIds
+        estado: equipo.estado
       }
     });
   } catch (err) {
     console.error('❌ Error al crear equipo:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
+};
+
+/**
+ * Obtener equipos pendientes de aprobación
+ */
+exports.obtenerEquiposPendientes = async (req, res) => {
+  try {
+    console.log('✅ [obtenerEquiposPendientes] Buscando equipos con estado "pendiente"...');
+
+    const equipos = await Equipo.find({ estado: 'pendiente' })
+      .select('nombre capitanNombre estado fechaRegistro');
+
+    console.log(`✅ [obtenerEquiposPendientes] Encontrados ${equipos.length} equipos`);
+
+    res.json({
+      success: true,
+      equipos: equipos.map(e => ({
+        id: e._id,
+        nombre: e.nombre,
+        capitanNombre: e.capitanNombre,
+        estado: e.estado,
+        fechaRegistro: e.fechaRegistro
+      }))
+    });
+  } catch (err) {
+    console.error('❌ [obtenerEquiposPendientes] Error:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
