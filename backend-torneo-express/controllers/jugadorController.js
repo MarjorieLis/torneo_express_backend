@@ -18,8 +18,8 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
     const user = await User.findOne({
       rol: 'jugador',
       $or: [
-        { 'jugadorInfo.cedula': query },
-        { email: query }
+        { 'jugadorInfo.cedula': query }, // Busca por cédula
+        { email: query }               // Busca por correo
       ]
     }).select('nombre email jugadorInfo equipoId');
 
@@ -54,6 +54,7 @@ exports.buscarJugadorPorCedulaOCorreo = async (req, res) => {
     });
   }
 };
+
 /**
  * ✅ Obtener jugadores disponibles (sin equipo)
  */

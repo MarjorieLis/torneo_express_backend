@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,7 +8,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-origin: ['http://localhost:3000', 'https://frontend-torneo-express.com'],  credentials: true,
+  origin: ['http://localhost:3000', 'https://frontend-torneo-express.com'],
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -23,7 +25,7 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/torneos', require('./routes/torneoRoutes'));
 app.use('/api/partidos', require('./routes/partidoRoutes'));
-app.use('/api/jugadores', require('./routes/jugadorRoutes'));
+app.use('/api/jugadores', require('./routes/jugadorRoutes')); // ✅ Asegúrate de que este sea el nombre del archivo
 
 // Ruta de prueba
 app.get('/', (req, res) => {

@@ -1,4 +1,4 @@
-// routes/jugadores.js
+// routes/jugadorRoutes.js
 const express = require('express');
 const router = express.Router();
 const { buscarJugadorPorCedulaOCorreo, obtenerJugadoresDisponibles } = require('../controllers/jugadorController');
