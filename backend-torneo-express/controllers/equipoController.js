@@ -47,14 +47,18 @@ exports.crearEquipo = async (req, res) => {
 };
 
 /**
- * Obtener equipos pendientes de aprobación
+ * Obtener equipos pendientes de aprobación (con información completa)
  */
 exports.obtenerEquiposPendientes = async (req, res) => {
   try {
     console.log('✅ [obtenerEquiposPendientes] Buscando equipos con estado "pendiente"...');
 
     const equipos = await Equipo.find({ estado: 'pendiente' })
-      .select('nombre capitanNombre estado fechaRegistro');
+      .populate('torneoId', 'nombre')           // Nombre del torneo
+      .populate('capitanId', 'nombre telefono') // Datos del capitán (opcional, si lo tienes en User)
+      .populate('jugadorIds', 'nombre')         // Nombres de los jugadores
+      .select('nombre capitanNombre capitanTelefono torneoId jugadorIds estado fechaRegistro')
+      .sort({ fechaRegistro: -1 });
 
     console.log(`✅ [obtenerEquiposPendientes] Encontrados ${equipos.length} equipos`);
 
@@ -63,7 +67,15 @@ exports.obtenerEquiposPendientes = async (req, res) => {
       equipos: equipos.map(e => ({
         id: e._id,
         nombre: e.nombre,
-        capitanNombre: e.capitanNombre,
+        torneo: {
+          id: e.torneoId._id,
+          nombre: e.torneoId.nombre
+        },
+        capitan: {
+          nombre: e.capitanNombre,
+          telefono: e.capitanTelefono
+        },
+        jugadores: e.jugadorIds.map(j => ({ nombre: j.nombre })), // Lista de nombres
         estado: e.estado,
         fechaRegistro: e.fechaRegistro
       }))
