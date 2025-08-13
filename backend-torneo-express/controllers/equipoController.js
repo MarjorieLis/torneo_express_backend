@@ -54,9 +54,9 @@ exports.obtenerEquiposPendientes = async (req, res) => {
     console.log('✅ [obtenerEquiposPendientes] Buscando equipos con estado "pendiente"...');
 
     const equipos = await Equipo.find({ estado: 'pendiente' })
-      .populate('torneoId', 'nombre')           // Nombre del torneo
-      .populate('capitanId', 'nombre telefono') // Datos del capitán
-      .populate('jugadorIds', 'nombre')         // Nombres de los jugadores
+      .populate('torneoId', 'nombre')
+      .populate('capitanId', 'nombre telefono')
+      .populate('jugadorIds', 'nombre')
       .select('nombre capitanNombre capitanTelefono torneoId jugadorIds estado fechaRegistro')
       .sort({ fechaRegistro: -1 });
 
@@ -87,9 +87,7 @@ exports.obtenerEquiposPendientes = async (req, res) => {
       message: 'Error en el servidor'
     });
   }
-  // ✅ Aquí termina el try-catch
 };
-// ✅ Aquí termina la función obtenerEquiposPendientes
 
 /**
  * Aprobar un equipo
@@ -98,7 +96,6 @@ exports.aprobarEquipo = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ✅ Agrega un log antes de la actualización
     console.log(`[aprobarEquipo] Intentando actualizar equipo con ID: ${id}`);
 
     const equipo = await Equipo.findByIdAndUpdate(
@@ -107,7 +104,6 @@ exports.aprobarEquipo = async (req, res) => {
       { new: true }
     );
 
-    // ✅ Agrega un log después de la actualización
     console.log(`[aprobarEquipo] Estado actualizado: ${equipo ? equipo.estado : 'No se encontró equipo'}`);
 
     if (!equipo) {
@@ -135,7 +131,9 @@ exports.aprobarEquipo = async (req, res) => {
   }
 };
 
-// Opcional: rechazar equipo
+/**
+ * Rechazar equipo
+ */
 exports.rechazarEquipo = async (req, res) => {
   try {
     const { id } = req.params;
@@ -159,6 +157,50 @@ exports.rechazarEquipo = async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Error al rechazar equipo:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
+  // ✅ Aquí termina la función rechazarEquipo
+};
+
+/**
+ * Obtener equipos aprobados
+ */
+exports.obtenerEquiposAprobados = async (req, res) => {
+  try {
+    console.log('✅ [obtenerEquiposAprobados] Buscando equipos con estado "aprobado"...');
+
+    const equipos = await Equipo.find({ estado: 'aprobado' })
+      .populate('torneoId', 'nombre')
+      .populate('capitanId', 'nombre telefono')
+      .populate('jugadorIds', 'nombre')
+      .select('nombre capitanNombre capitanTelefono torneoId jugadorIds estado fechaRegistro')
+      .sort({ fechaRegistro: -1 });
+
+    console.log(`✅ [obtenerEquiposAprobados] Encontrados ${equipos.length} equipos`);
+
+    res.json({
+      success: true,
+      equipos: equipos.map(e => ({
+        id: e._id,
+        nombre: e.nombre,
+        torneo: {
+          id: e.torneoId._id,
+          nombre: e.torneoId.nombre
+        },
+        capitan: {
+          nombre: e.capitanNombre,
+          telefono: e.capitanTelefono
+        },
+        jugadores: e.jugadorIds.map(j => ({ nombre: j.nombre })),
+        estado: e.estado,
+        fechaRegistro: e.fechaRegistro
+      }))
+    });
+  } catch (err) {
+    console.error('❌ [obtenerEquiposAprobados] Error:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
