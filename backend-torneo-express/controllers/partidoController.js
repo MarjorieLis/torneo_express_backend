@@ -1,115 +1,167 @@
+// controllers/partidoController.js
 const Partido = require('../models/Partido');
 const Torneo = require('../models/Torneo');
+const Equipo = require('../models/Equipo');
 
-// RF-004: Programar partidos (manual o automático)
-exports.programarPartidos = async (req, res) => {
-  const { torneoId, modo, partidos: partidosData } = req.body;
-
+/**
+ * Programar un partido
+ */
+exports.programarPartido = async (req, res) => {
   try {
-    // ✅ 1. Validar que el torneo exista
+    const { tipoProgramacion, torneoId } = req.body;
+
+    // ✅ Validar que torneoId sea un ObjectId válido
+    if (!/^[0-9a-fA-F]{24}$/.test(torneoId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de torneo inválido'
+      });
+    }
+
     const torneo = await Torneo.findById(torneoId);
     if (!torneo) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         message: 'Torneo no encontrado'
       });
     }
 
-    // ✅ 2. Verificar que el usuario sea el creador
-    if (torneo.creador.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'No tienes permiso para programar partidos en este torneo'
-      });
-    }
+    if (tipoProgramacion === 'automatica') {
+      const partidosGenerados = await generarPartidosAutomaticos(torneo);
 
-    // ✅ 3. Validar que haya equipos inscritos
-    if (!torneo.equipos || torneo.equipos.length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: 'No hay suficientes equipos inscritos para programar partidos'
-      });
-    }
-
-    let partidosCreados = [];
-
-    if (modo === 'automatica') {
-      // Generar calendario sin conflictos
-      partidosCreados = await generarCalendarioAutomatico(torneo);
-    } else {
-      // Validar y guardar manual
-      for (let p of partidosData) {
-        // ✅ Validación de campos obligatorios
-        if (!p.equipoLocal || !p.equipoVisitante || !p.fecha || !p.hora || !p.lugar) {
-          return res.status(400).json({
-            success: false,
-            message: 'Todos los campos (equipos, fecha, hora, lugar) son obligatorios en modo manual'
-          });
-        }
-
-        const partido = new Partido({
-          torneoId,
-          equipoLocal: p.equipoLocal,
-          equipoVisitante: p.equipoVisitante,
-          fecha: p.fecha,
-          hora: p.hora,
-          lugar: p.lugar,
-          estado: 'programado',
+      if (!partidosGenerados || partidosGenerados.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se pudieron generar partidos automáticos'
         });
-
-        await partido.save();
-        partidosCreados.push(partido);
       }
+
+      const partidosGuardados = await Partido.insertMany(partidosGenerados);
+
+      return res.json({
+        success: true,
+        message: 'Partidos programados automáticamente',
+        partidos: partidosGuardados.map(p => p.toJSON())
+      });
+    } else {
+      const { fecha, hora, lugar, equipoLocalId, equipoVisitanteId, capitanId, titulares, suplentes } = req.body;
+
+      // ✅ Validar IDs de equipos
+      if (!/^[0-9a-fA-F]{24}$/.test(equipoLocalId) || !/^[0-9a-fA-F]{24}$/.test(equipoVisitanteId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID(s) de equipo(s) inválido(s)'
+        });
+      }
+
+      const equipoLocal = await Equipo.findById(equipoLocalId);
+      const equipoVisitante = await Equipo.findById(equipoVisitanteId);
+
+      if (!equipoLocal || !equipoVisitante) {
+        return res.status(400).json({
+          success: false,
+          message: 'Equipo(s) no encontrado(s)'
+        });
+      }
+
+      const partido = new Partido({
+        tipoProgramacion,
+        fecha,
+        hora,
+        lugar,
+        equipoLocal: equipoLocalId,
+        equipoVisitante: equipoVisitanteId,
+        capitan: capitanId,
+        titulares,
+        suplentes
+      });
+
+      await partido.save();
+
+      return res.json({
+        success: true,
+        message: 'Partido programado exitosamente',
+        partido: partido.toJSON()
+      });
     }
-
-    res.json({
-      success: true,
-      partidos: partidosCreados,
-      message: `Partidos ${modo === 'automatica' ? 'generados automáticamente' : 'programados manualmente'}`,
-    });
-
   } catch (err) {
-    console.error('❌ Error al programar partidos:', err.message);
+    console.error('❌ Error al programar partido:', err.message);
     res.status(500).json({
       success: false,
-      message: 'Error en el servidor al programar partidos'
+      message: 'Error en el servidor'
     });
   }
 };
 
-// ✅ Lógica de generación automática
-const generarCalendarioAutomatico = async (torneo) => {
-  const equipos = torneo.equipos.filter(e => e); // Asegura que no haya valores nulos
-  const partidos = [];
-  const MS_POR_DIA = 24 * 60 * 60 * 1000; // ✅ 1 día en milisegundos
-  let index = 0;
+/**
+ * Generar partidos automáticamente
+ */
+async function generarPartidosAutomaticos(torneo) {
+  try {
+    const equipos = await Equipo.find({ torneoId: torneo._id });
 
-  // Fecha inicial del torneo
-  let fecha = new Date(torneo.fechaInicio);
-
-  // Generar partidos: todos contra todos
-  for (let i = 0; i < equipos.length; i++) {
-    for (let j = i + 1; j < equipos.length; j++) {
-      const dia = Math.floor(index / 3); // 3 partidos por día
-      const hora = (index % 3) * 2 + 18; // 18, 20, 22
-
-      const fechaPartido = new Date(fecha.getTime() + dia * MS_POR_DIA);
-
-      const partido = new Partido({
-        torneoId: torneo._id,
-        equipoLocal: equipos[i],
-        equipoVisitante: equipos[j],
-        fecha: fechaPartido,
-        hora: { hour: hora, minute: 0 },
-        lugar: `Cancha ${index % 3 + 1}`,
-        estado: 'programado',
-      });
-
-      await partido.save();
-      partidos.push(partido);
-      index++;
+    if (!equipos || equipos.length < 2) {
+      throw new Error('Se necesitan al menos 2 equipos para generar partidos');
     }
-  }
 
-  return partidos;
+    const partidos = [];
+
+    for (let i = 0; i < equipos.length; i++) {
+      for (let j = i + 1; j < equipos.length; j++) {
+        partidos.push({
+          tipoProgramacion: 'automatica',
+          equipoLocal: equipos[i]._id.toString(),
+          equipoVisitante: equipos[j]._id.toString(),
+          lugar: torneo.lugar || 'Sin lugar',
+          fecha: torneo.fechaInicio,
+          hora: '14:00',
+        });
+      }
+    }
+
+    return partidos;
+  } catch (err) {
+    console.error('❌ Error al generar partidos automáticos:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Obtener partidos por torneo
+ */
+exports.obtenerPartidosPorTorneo = async (req, res) => {
+  try {
+    const { torneoId } = req.params;
+
+    if (!/^[0-9a-fA-F]{24}$/.test(torneoId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de torneo inválido'
+      });
+    }
+
+    const partidos = await Partido.find({ torneoId })
+      .populate('equipoLocal', 'nombre')
+      .populate('equipoVisitante', 'nombre')
+      .sort({ fecha: 1 });
+
+    res.json({
+      success: true,
+      partidos: partidos.map(p => ({
+        id: p._id,
+        equipoLocal: p.equipoLocal.nombre,
+        equipoVisitante: p.equipoVisitante.nombre,
+        fecha: p.fecha,
+        hora: p.hora,
+        lugar: p.lugar,
+        estado: p.estado,
+      }))
+    });
+  } catch (err) {
+    console.error('❌ Error al obtener partidos por torneo:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
 };

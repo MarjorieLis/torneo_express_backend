@@ -14,4 +14,5 @@ router.put('/rechazado/:id', auth, equipoController.rechazarEquipo);
 // ✅ Nueva ruta: obtener equipos aprobados
 router.get('/aprobados', auth, equipoController.obtenerEquiposAprobados);
 
-module.exports = router;
+// ✅ Ruta para obtener equipos por torneo
+router.get('/torneo/:torneoId', auth, equipoController.obtenerEquiposPorTorneo);module.exports = router;

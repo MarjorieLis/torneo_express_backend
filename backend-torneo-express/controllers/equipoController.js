@@ -47,7 +47,7 @@ exports.crearEquipo = async (req, res) => {
 };
 
 /**
- * Obtener equipos pendientes de aprobación (con información completa)
+ * Obtener equipos pendientes de aprobación
  */
 exports.obtenerEquiposPendientes = async (req, res) => {
   try {
@@ -162,7 +162,6 @@ exports.rechazarEquipo = async (req, res) => {
       message: 'Error en el servidor'
     });
   }
-  // ✅ Aquí termina la función rechazarEquipo
 };
 
 /**
@@ -201,6 +200,34 @@ exports.obtenerEquiposAprobados = async (req, res) => {
     });
   } catch (err) {
     console.error('❌ [obtenerEquiposAprobados] Error:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor'
+    });
+  }
+};
+
+/**
+ * Obtener equipos por torneo
+ */
+exports.obtenerEquiposPorTorneo = async (req, res) => {
+  try {
+    const { torneoId } = req.params;
+
+    const equipos = await Equipo.find({ torneoId })
+      .select('nombre capitanNombre estado');
+
+    res.json({
+      success: true,
+      equipos: equipos.map(e => ({
+        id: e._id,
+        nombre: e.nombre,
+        capitanNombre: e.capitanNombre,
+        estado: e.estado
+      }))
+    });
+  } catch (err) {
+    console.error('❌ Error al obtener equipos por torneo:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
