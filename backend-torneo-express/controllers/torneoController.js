@@ -46,12 +46,21 @@ exports.crearTorneo = async (req, res) => {
 };
 
 /**
- * Obtener todos los torneos
+ * Obtener todos los torneos (solo id y nombre para dropdown)
  */
 exports.obtenerTorneos = async (req, res) => {
   try {
-    const torneos = await Torneo.find().sort({ createdAt: -1 });
-    res.json({ success: true, torneos });
+    const torneos = await Torneo.find()
+      .select('_id nombre') // ✅ Solo devuelve id y nombre
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      torneos: torneos.map(t => ({
+        id: t._id,
+        nombre: t.nombre
+      }))
+    });
   } catch (err) {
     console.error('❌ Error al obtener torneos:', err.message);
     res.status(500).json({
