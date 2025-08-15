@@ -70,12 +70,12 @@ exports.register = async (req, res) => {
         email: user.email,
         rol: user.rol,
         campus: user.campus,
-        jugadorInfo: user.jugadorInfo // ✅ Enviar al frontend
+        jugadorInfo: user.jugadorInfo
       }
     });
 
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error en register:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
@@ -122,12 +122,12 @@ exports.login = async (req, res) => {
         email: user.email,
         rol: user.rol,
         campus: user.campus,
-        jugadorInfo: user.jugadorInfo // ✅ Incluir en el login
+        jugadorInfo: user.jugadorInfo
       }
     });
 
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error en login:', err.message);
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'

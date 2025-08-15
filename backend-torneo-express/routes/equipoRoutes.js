@@ -1,18 +1,36 @@
 // routes/equipoRoutes.js
 const express = require('express');
 const router = express.Router();
+const verificarToken = require('../middleware/auth');
+const {
+  crearEquipo,
+  obtenerEquiposPendientes,
+  aprobarEquipo,
+  rechazarEquipo,
+  obtenerEquiposAprobados,
+  obtenerEquiposPorTorneo,
+  asignarJugadores
+} = require('../controllers/equipoController');
 
-// ✅ Importa todo el controlador
-const equipoController = require('../controllers/equipoController');
-const auth = require('../middleware/auth');
+// ✅ Crear un nuevo equipo
+router.post('/', verificarToken, crearEquipo);
 
-router.post('/', auth, equipoController.crearEquipo);
-router.get('/pendientes', auth, equipoController.obtenerEquiposPendientes);
-router.put('/aprobado/:id', auth, equipoController.aprobarEquipo);
-router.put('/rechazado/:id', auth, equipoController.rechazarEquipo);
+// ✅ Obtener equipos pendientes
+router.get('/pendientes', verificarToken, obtenerEquiposPendientes);
 
-// ✅ Nueva ruta: obtener equipos aprobados
-router.get('/aprobados', auth, equipoController.obtenerEquiposAprobados);
+// ✅ Obtener equipos aprobados
+router.get('/aprobados', verificarToken, obtenerEquiposAprobados);
 
-// ✅ Ruta para obtener equipos por torneo
-router.get('/torneo/:torneoId', auth, equipoController.obtenerEquiposPorTorneo);module.exports = router;
+// ✅ Aprobar equipo
+router.put('/aprobado/:id', verificarToken, aprobarEquipo);
+
+// ✅ Rechazar equipo
+router.put('/rechazado/:id', verificarToken, rechazarEquipo);
+
+// ✅ Obtener equipos por torneo
+router.get('/torneo/:torneoId', verificarToken, obtenerEquiposPorTorneo);
+
+// ✅ ✅ RUTA CLAVE: Asignar jugadores a un equipo por ID válido
+router.put('/:id/jugadores', verificarToken, asignarJugadores);
+
+module.exports = router;

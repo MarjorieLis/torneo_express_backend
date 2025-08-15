@@ -1,5 +1,6 @@
 // controllers/equipoController.js
 const Equipo = require('../models/Equipo');
+const mongoose = require('mongoose'); // ✅ Necesario para validar ObjectId
 
 /**
  * Crear un nuevo equipo
@@ -231,6 +232,53 @@ exports.obtenerEquiposPorTorneo = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error en el servidor'
+    });
+  }
+};
+
+/**
+ * Asignar jugadores a un equipo
+ */
+exports.asignarJugadores = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { jugadorIds } = req.body;
+
+    // ✅ Validación: Verificar si el ID es un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de equipo no válido'
+      });
+    }
+
+    const equipo = await Equipo.findById(id);
+    if (!equipo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Equipo no encontrado',
+      });
+    }
+
+    // Asignar jugadores (evita duplicados)
+    jugadorIds.forEach((jugadorId) => {
+      if (!equipo.jugadorIds.includes(jugadorId)) {
+        equipo.jugadorIds.push(jugadorId);
+      }
+    });
+
+    await equipo.save();
+
+    res.json({
+      success: true,
+      message: 'Jugadores asignados correctamente',
+      equipo,
+    });
+  } catch (error) {
+    console.error('❌ Error en asignarJugadores:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor',
     });
   }
 };
