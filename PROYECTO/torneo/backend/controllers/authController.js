@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
  * RF-014: Registro de Usuarios con Información Personal Detallada
  */
 exports.register = async (req, res) => {
-  const { name, email, password, role, position, jerseyNumber } = req.body;
+  const { name, email, password, role, position, jerseyNumber, cedula } = req.body;
 
   // Validar dominio @uide.edu.ec
   if (!email.endsWith('@uide.edu.ec')) {
@@ -21,14 +21,24 @@ exports.register = async (req, res) => {
       return res.status(400).json({ msg: 'El usuario ya existe' });
     }
 
+    // ✅ Validación manual de cédula para jugadores
+    if (role === 'jugador') {
+      if (!cedula || cedula.trim().length < 5) {
+        return res.status(400).json({ 
+          msg: 'La identificación es obligatoria para jugadores y debe tener al menos 5 caracteres' 
+        });
+      }
+    }
+
     // Crear nuevo usuario
     user = new User({
       name,
       email,
       password,
-      role: role || 'jugador', // por defecto jugador
+      role: role || 'jugador',
       position,
-      jerseyNumber
+      jerseyNumber,
+      cedula: role === 'jugador' ? cedula : undefined
     });
 
     // Encriptar contraseña
@@ -50,7 +60,6 @@ exports.register = async (req, res) => {
           return res.status(500).json({ msg: 'Error al generar el token' });
         }
 
-        // Respuesta exitosa
         res.status(201).json({
           token,
           user: {
@@ -60,6 +69,7 @@ exports.register = async (req, res) => {
             role: user.role,
             position: user.position,
             jerseyNumber: user.jerseyNumber,
+            cedula: user.cedula,
             profilePhoto: user.profilePhoto,
           },
         });
@@ -116,6 +126,7 @@ exports.login = async (req, res) => {
             role: user.role,
             position: user.position,
             jerseyNumber: user.jerseyNumber,
+            cedula: user.cedula,
             profilePhoto: user.profilePhoto,
           },
         });
