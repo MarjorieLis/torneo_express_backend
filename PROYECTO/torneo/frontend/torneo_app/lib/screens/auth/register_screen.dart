@@ -17,6 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _positionController = TextEditingController();
   final _jerseyNumberController = TextEditingController();
+  final _cedulaController = TextEditingController();
 
   String? _role;
   bool _isLoading = false;
@@ -29,20 +30,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'name': _nameController.text.trim(),
         'email': _emailController.text.trim().toLowerCase(),
         'password': _passwordController.text,
-        'role': _role,
-        'position': _positionController.text.trim(),
-        'jerseyNumber': int.tryParse(_jerseyNumberController.text) ?? null,
+        'role': _role ?? 'jugador',
+        'position': _role == 'jugador' ? _positionController.text.trim() : null,
+        'jerseyNumber': _role == 'jugador' ? (int.tryParse(_jerseyNumberController.text) ?? null) : null,
+        'cedula': _role == 'jugador' ? _cedulaController.text.trim() : null,
       };
 
       try {
         final response = await ApiService.post('/auth/register', data);
-        if (response.statusCode == 200) {
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
           final userData = response.data['user'];
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('✅ Registro exitoso')),
           );
 
-          // Redirigir según rol
           if (userData['role'] == 'organizador') {
             Navigator.pushReplacement(
               context,
@@ -59,8 +61,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             );
           }
         } else {
+          final errorMsg = response.data['msg'] ?? 'Error en el registro';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.data['msg'] ?? 'Error en el registro')),
+            SnackBar(content: Text('❌ $errorMsg')),
           );
         }
       } on Exception catch (e) {
@@ -87,7 +90,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Logo UIDE
               Image.asset(
                 'assets/logo_uide.png',
                 height: 120,
@@ -183,6 +185,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               // Campos condicionales para jugador
               if (_role == 'jugador') ...[
+                TextFormField(
+                  controller: _cedulaController,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                    labelText: 'Número de identificación *',
+                    hintText: 'Cédula o pasaporte',
+                    prefixIcon: const Icon(Icons.credit_card),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  validator: (v) {
+                    if (v!.isEmpty) return 'Este campo es obligatorio';
+                    if (v.length < 5) return 'Debe tener al menos 5 caracteres';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 15),
                 TextFormField(
                   controller: _positionController,
                   decoration: InputDecoration(
