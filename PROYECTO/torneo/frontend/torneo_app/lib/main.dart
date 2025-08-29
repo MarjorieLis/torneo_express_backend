@@ -95,20 +95,21 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const AuthScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/login': (context) => LoginScreen(),
-        '/perfil_jugador': (context) {
-          final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return PerfilJugadorScreen(user: user ?? {});
-        },
-        '/perfil_organizador': (context) {
-          final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return PerfilOrganizadorScreen(user: user ?? {});
-        },
-        '/crear_torneo': (context) => CrearTorneoScreen(),
-        '/lista_torneos': (context) => ListaTorneosScreen(),
-      },
+  '/': (context) => const AuthScreen(),
+  '/register': (context) => RegisterScreen(),
+  '/login': (context) => LoginScreen(),
+  '/perfil_jugador': (context) {
+    final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    return PerfilJugadorScreen(user: user ?? {});
+  },
+  '/perfil_organizador': (context) {
+    final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    return PerfilOrganizadorScreen(user: user ?? {});
+  },
+  '/crear_torneo': (context) => CrearTorneoScreen(),
+  '/lista_torneos': (context) => ListaTorneosScreen(),
+  // ✅ Añadir esta ruta
+},
       // ✅ Soporte para calendario en español
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

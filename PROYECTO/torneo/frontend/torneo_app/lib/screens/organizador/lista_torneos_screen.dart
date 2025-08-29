@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
+import 'detalle_torneo_screen.dart';
 
 class ListaTorneosScreen extends StatefulWidget {
   @override
@@ -24,7 +25,6 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     try {
       final response = await ApiService.get('/torneos');
       setState(() {
-        // ✅ Ajuste: acepta ambos formatos
         if (response.data is List) {
           torneos = response.data;
         } else if (response.data is Map && response.data.containsKey('data')) {
@@ -48,7 +48,7 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo suspendido')),
       );
-      _cargarTorneos(); // Recargar lista
+      _cargarTorneos();
     } on Exception catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al suspender: $e')),
@@ -62,7 +62,7 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo cancelado')),
       );
-      _cargarTorneos(); // Recargar lista
+      _cargarTorneos();
     } on Exception catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al cancelar: $e')),
@@ -161,6 +161,25 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                       ),
                                     ],
                                   ),
+                                // Botón "Ver detalles"
+                                SizedBox(width: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetalleTorneoScreen(torneo: torneo),
+                                      ),
+                                    );
+                                  },
+                                  icon: Icon(Icons.info, size: 14),
+                                  label: Text('Detalles', style: TextStyle(fontSize: 12)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Constants.primaryColor,
+                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                ),
                               ],
                             ),
                           ],
