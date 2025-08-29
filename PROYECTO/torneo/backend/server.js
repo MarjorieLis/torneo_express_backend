@@ -15,6 +15,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/torneos', require('./routes/torneos'));
 
 // Ruta de prueba
 app.get('/', (req, res) => {
