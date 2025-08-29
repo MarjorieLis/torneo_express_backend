@@ -5,38 +5,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static final Dio _dio = Dio();
 
-  static const String baseUrl = 'http://192.168.0.9:5000/api';
+  static const String baseUrl = 'http://10.0.2.2:5000/api';
 
   static void init() {
-    _dio.options
-      ..baseUrl = baseUrl
-      ..connectTimeout = const Duration(seconds: 15)
-      ..receiveTimeout = const Duration(seconds: 15)
-      ..headers = {
-        'Content-Type': 'application/json',
-      };
+  _dio.options
+    ..baseUrl = baseUrl
+    ..connectTimeout = const Duration(seconds: 30) // ✅ Aumentado
+    ..receiveTimeout = const Duration(seconds: 30) // ✅ Aumentado
+    ..headers = {
+      'Content-Type': 'application/json',
+    };
 
-    // ✅ Interceptor correcto
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          // ✅ Añadir token
-          _getToken().then((token) {
-            if (token != null) {
-              options.headers['x-auth-token'] = token;
-            }
-          });
-          handler.next(options); // ✅ Continuar
-        },
-        onResponse: (response, handler) {
-          handler.next(response); // ✅ Continuar
-        },
-        onError: (error, handler) {
-          handler.next(error); // ✅ Continuar
-        },
-      ),
-    );
-  }
+  _dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _getToken();
+        print('🔍 Token en petición: $token');
+        if (token != null) {
+          options.headers['x-auth-token'] = token;
+        }
+        handler.next(options);
+      },
+    ),
+  );
+}
 
   static Future<Response> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
@@ -45,6 +37,9 @@ class ApiService {
     } on DioError catch (e) {
       _handleError(e);
       rethrow;
+    } catch (e) {
+      print('❌ Error inesperado: $e');
+      throw Exception('Error desconocido: $e');
     }
   }
 
@@ -55,6 +50,9 @@ class ApiService {
     } on DioError catch (e) {
       _handleError(e);
       rethrow;
+    } catch (e) {
+      print('❌ Error inesperado: $e');
+      throw Exception('Error desconocido: $e');
     }
   }
 
@@ -64,9 +62,11 @@ class ApiService {
     } else if (e.type == DioErrorType.receiveTimeout) {
       throw Exception('Error: El servidor tardó demasiado en responder.');
     } else if (e.response?.statusCode == 400) {
-      throw Exception(e.response?.data['msg'] ?? 'Datos inválidos');
+      final msg = e.response?.data['msg'] ?? 'Datos inválidos';
+      throw Exception('Error 400: $msg');
     } else if (e.response?.statusCode == 401) {
-      throw Exception('No autorizado. Verifica tus credenciales.');
+      final msg = e.response?.data['msg'] ?? 'No autorizado';
+      throw Exception('No autorizado: $msg');
     } else if (e.response?.statusCode == 404) {
       throw Exception('Recurso no encontrado. Verifica la URL.');
     } else if (e.response?.statusCode == 500) {
@@ -78,6 +78,8 @@ class ApiService {
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    final token = prefs.getString('auth_token');
+    print('🔐 Token obtenido: $token');
+    return token;
   }
 }

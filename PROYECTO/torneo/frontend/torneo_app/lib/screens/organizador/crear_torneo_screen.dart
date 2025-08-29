@@ -28,7 +28,6 @@ class _CrearTorneoScreenState extends State<CrearTorneoScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      // 👇 Configuración para español
       locale: const Locale('es'),
     );
     if (picked != null) {
@@ -42,96 +41,54 @@ class _CrearTorneoScreenState extends State<CrearTorneoScreen> {
     }
   }
 
-  // Verificar si las fechas están ocupadas
-  Future<bool> _validarFechasDisponibles(DateTime inicio, DateTime fin) async {
-  try {
-    final response = await ApiService.get('/torneos');
-    if (response.statusCode != 200) return false;
-
-    List torneos = [];
-    if (response.data is List) {
-      torneos = response.data as List;
-    } else if (response.data is Map && response.data.containsKey('data')) {
-      torneos = response.data['data'] as List;
+void _submit() async {
+  if (_formKey.currentState!.validate()) {
+    if (_fechaInicio == null || _fechaFin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Selecciona ambas fechas')),
+      );
+      return;
     }
 
-    for (final torneo in torneos) {
-      final fechaInicioTorneo = DateTime.parse(torneo['fechaInicio']);
-      final fechaFinTorneo = DateTime.parse(torneo['fechaFin']);
+    if (_fechaInicio!.isAfter(_fechaFin!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('La fecha de inicio debe ser anterior a la de fin')),
+      );
+      return;
+    }
 
-      if (_fechasSolapan(inicio, fin, fechaInicioTorneo, fechaFinTorneo)) {
-        return false;
+    final data = {
+      'nombre': _nombreController.text,
+      'disciplina': _disciplina?.toLowerCase(),
+      'fechaInicio': _fechaInicio?.toIso8601String(),
+      'fechaFin': _fechaFin?.toIso8601String(),
+      'maxEquipos': _maxEquipos,
+      'reglas': _reglasController.text,
+      'formato': _formato?.toLowerCase(),
+    };
+
+    print('📤 Enviando datos: $data'); // 👈 Depuración
+
+    try {
+      final response = await ApiService.post('/torneos', data);
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ Torneo creado con éxito')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.data['msg'] ?? 'Desconocido'}')),
+        );
       }
+    } on Exception catch (e) {
+      // ✅ Ahora el error no será null
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error: $e')), // ✅ $e mostrará el mensaje real
+      );
     }
-    return true;
-  } catch (e) {
-    print('Error al validar fechas: $e');
-    return true; // ✅ Si hay error, permite crear (mejor que bloquear)
   }
 }
-
-  bool _fechasSolapan(DateTime inicio1, DateTime fin1, DateTime inicio2, DateTime fin2) {
-    // Si el inicio de uno está entre el inicio y fin del otro
-    return inicio1.isAfter(inicio2) && inicio1.isBefore(fin2) ||
-           fin1.isAfter(inicio2) && fin1.isBefore(fin2) ||
-           inicio2.isAfter(inicio1) && inicio2.isBefore(fin1);
-  }
-
-  void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      if (_fechaInicio == null || _fechaFin == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Selecciona ambas fechas')),
-        );
-        return;
-      }
-
-      // Validar que la fecha de inicio sea anterior a la de fin
-      if (_fechaInicio!.isAfter(_fechaFin!)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('La fecha de inicio debe ser anterior a la de fin')),
-        );
-        return;
-      }
-
-      // Validar que las fechas no estén ocupadas
-      final disponible = await _validarFechasDisponibles(_fechaInicio!, _fechaFin!);
-      if (!disponible) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Las fechas seleccionadas ya están ocupadas por otros torneos')),
-        );
-        return;
-      }
-
-      final data = {
-        'nombre': _nombreController.text,
-        'disciplina': _disciplina,
-        'fechaInicio': _fechaInicio?.toIso8601String(),
-        'fechaFin': _fechaFin?.toIso8601String(),
-        'maxEquipos': _maxEquipos,
-        'reglas': _reglasController.text,
-        'formato': _formato,
-      };
-
-      try {
-        final response = await ApiService.post('/torneos', data);
-        if (response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('✅ Torneo creado con éxito')),
-          );
-          Navigator.pop(context);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${response.data['msg'] ?? 'Desconocido'}')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error de conexión: $e')),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +128,7 @@ class _CrearTorneoScreenState extends State<CrearTorneoScreen> {
               // Disciplina
               DropdownButtonFormField(
                 value: _disciplina,
-                items: ['Futbol', 'Baloncesto', 'Voleibol', 'Tenis']
+                items: ['fútbol', 'baloncesto', 'voleibol', 'tenis']
                     .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                     .toList(),
                 hint: Text('Disciplina deportiva *'),
@@ -225,7 +182,7 @@ class _CrearTorneoScreenState extends State<CrearTorneoScreen> {
               // Formato
               DropdownButtonFormField(
                 value: _formato,
-                items: ['Grupos', 'EliminaciOn directa']
+                items: ['grupos', 'eliminación directa']
                     .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                     .toList(),
                 hint: Text('Formato del torneo *'),

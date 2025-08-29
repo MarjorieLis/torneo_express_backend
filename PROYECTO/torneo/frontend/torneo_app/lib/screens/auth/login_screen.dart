@@ -1,8 +1,10 @@
 // lib/screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torneo_app/screens/jugador/perfil_jugador.dart';
 import 'package:torneo_app/screens/organizador/perfil_organizador.dart';
 import 'package:torneo_app/services/api_service.dart';
+import 'package:torneo_app/services/auth_service.dart'; // ✅ Importa AuthService
 import 'package:torneo_app/utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,12 +29,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final response = await ApiService.post('/auth/login', data);
+        print('✅ Respuesta de login: ${response.data}'); // ✅ Depuración
+
         if (response.statusCode == 200) {
           final userData = response.data['user'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Inicio de sesión exitoso')),
-          );
+          final token = response.data['token']; // ✅ Extraer token
 
+          print('🔐 Token recibido: $token'); // ✅ Depuración
+
+          if (token == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('❌ No se recibió token')),
+            );
+            return;
+          }
+
+          // ✅ Guardar sesión
+          final authService = Provider.of<AuthService>(context, listen: false);
+          await authService.login(token, userData);
+
+          // ✅ Redirigir según rol
           if (userData['role'] == 'organizador') {
             Navigator.pushReplacement(
               context,
@@ -77,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Logo UIDE
               Image.asset(
                 'assets/logo_uide.png',
                 height: 120,
@@ -101,7 +116,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Correo
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -122,7 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Contraseña
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,
@@ -139,7 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Botón de login
               ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
@@ -155,8 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
               ),
               const SizedBox(height: 15),
-
-              // Enlace a registro
               TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/register');

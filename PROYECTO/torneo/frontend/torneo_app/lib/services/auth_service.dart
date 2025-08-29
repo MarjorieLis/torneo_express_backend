@@ -24,31 +24,38 @@ class AuthService with ChangeNotifier {
     final token = prefs.getString('auth_token');
     final userData = prefs.getString('user_data');
 
+    print('🔐 Token en SharedPreferences: $token'); // ✅ Depuración
+    print('👥 User data en SharedPreferences: $userData');
+
     if (token != null && userData != null) {
       _token = token;
       try {
         _user = Map<String, dynamic>.from((jsonDecode(userData) as Map).cast<String, dynamic>());
         _isAuthenticated = true;
-        notifyListeners();
+        print('✅ Usuario autenticado automáticamente');
       } catch (e) {
-        print('Error al decodificar user_data: $e');
+        print('❌ Error al decodificar user_data: $e');
       }
     }
+    notifyListeners();
   }
 
   // Iniciar sesión
   Future<void> login(String token, Map<String, dynamic> user) async {
-    _token = token;
-    _user = user;
-    _isAuthenticated = true;
+  _token = token;
+  _user = user;
+  _isAuthenticated = true;
 
-    // Guardar en SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-    await prefs.setString('user_data', jsonEncode(user)); // ✅ Usar jsonEncode
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('auth_token', token);
+  await prefs.setString('user_data', jsonEncode(user));
 
-    notifyListeners();
-  }
+  // ✅ Verifica que se guardó
+  final savedToken = prefs.getString('auth_token');
+  print('✅ Token guardado y leído: $savedToken');
+
+  notifyListeners();
+}
 
   // Cerrar sesión
   Future<void> logout() async {
@@ -61,12 +68,12 @@ class AuthService with ChangeNotifier {
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
 
+    print('🚪 Sesión cerrada'); // ✅ Depuración
     notifyListeners();
   }
 
   // Eliminar cuenta (opcional)
   Future<void> deleteAccount() async {
     await logout();
-    // Aquí podrías llamar a un endpoint para eliminar la cuenta del backend
   }
 }

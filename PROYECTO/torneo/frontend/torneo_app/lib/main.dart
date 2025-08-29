@@ -1,8 +1,9 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // ✅ Para soporte de localización
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/date_symbol_data_local.dart'; // ✅ Para fechas en español
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Pantallas
 import 'screens/auth/register_screen.dart';
@@ -20,10 +21,14 @@ import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // ✅ Inicializa los datos de fechas en español
+
+  // ✅ Inicializa SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
+  // ✅ Inicializa datos de fecha en español
   await initializeDateFormatting('es', null);
-  
+
+  // ✅ Inicializa el servicio API
   ApiService.init();
 
   runApp(
@@ -102,15 +107,14 @@ class MyApp extends StatelessWidget {
         },
         '/crear_torneo': (context) => CrearTorneoScreen(),
       },
-      // ✅ Delegados de localización
+      // ✅ Soporte para calendario en español
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      // ✅ Idioma español
       supportedLocales: [
-        const Locale('es', ''),
+        const Locale('es', ''), // Español
       ],
     );
   }
