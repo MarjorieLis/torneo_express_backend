@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torneo_app/services/auth_service.dart';
 import 'package:torneo_app/utils/constants.dart';
-import 'crear_torneo_screen.dart'; // Asegúrate de tener este archivo
+import 'crear_torneo_screen.dart';
+import 'lista_torneos_screen.dart'; // Asegúrate de tener este archivo
 
 class PerfilOrganizadorScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -16,6 +17,47 @@ class PerfilOrganizadorScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Mi Perfil - Organizador'),
         backgroundColor: Constants.primaryColor,
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(user['name'] ?? 'Organizador'),
+              accountEmail: Text(user['email'] ?? ''),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.business_center, color: Constants.primaryColor),
+              ),
+              decoration: BoxDecoration(
+                color: Constants.primaryColor,
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Mi Perfil'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.list),
+              title: Text('Mis Torneos'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/lista_torneos');
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Cerrar sesión'),
+              onTap: () async {
+                final authService = Provider.of<AuthService>(context, listen: false);
+                await authService.logout();
+                Navigator.pushReplacementNamed(context, '/');
+              },
+            ),
+          ],
+        ),
       ),
       body: Container(
         padding: EdgeInsets.all(20),
@@ -66,27 +108,6 @@ class PerfilOrganizadorScreen extends StatelessWidget {
               },
               icon: Icon(Icons.add_circle),
               label: Text('Crear Torneo'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Constants.primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-
-            SizedBox(height: 30),
-
-            // Cerrar sesión
-            ElevatedButton.icon(
-              onPressed: () async {
-                final authService = Provider.of<AuthService>(context, listen: false);
-                await authService.logout();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Sesión cerrada')),
-                );
-                Navigator.pushReplacementNamed(context, '/');
-              },
-              icon: Icon(Icons.exit_to_app),
-              label: Text('Cerrar sesión'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Constants.primaryColor,
                 padding: EdgeInsets.symmetric(vertical: 12),

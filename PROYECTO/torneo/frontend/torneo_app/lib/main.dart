@@ -11,6 +11,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/jugador/perfil_jugador.dart';
 import 'screens/organizador/perfil_organizador.dart';
 import 'screens/organizador/crear_torneo_screen.dart';
+import 'screens/organizador/lista_torneos_screen.dart';
 
 // Servicios
 import 'services/api_service.dart';
@@ -106,6 +107,7 @@ class MyApp extends StatelessWidget {
           return PerfilOrganizadorScreen(user: user ?? {});
         },
         '/crear_torneo': (context) => CrearTorneoScreen(),
+        '/lista_torneos': (context) => ListaTorneosScreen(),
       },
       // ✅ Soporte para calendario en español
       localizationsDelegates: [

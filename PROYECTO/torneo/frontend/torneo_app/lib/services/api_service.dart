@@ -56,6 +56,16 @@ class ApiService {
     }
   }
 
+  static Future<Response> put(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(endpoint, data: data);
+      return response;
+    } on DioError catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
   static void _handleError(DioError e) {
     if (e.type == DioErrorType.connectionError || e.type == DioErrorType.connectionTimeout) {
       throw Exception('Error de red: No se pudo conectar al servidor.');
