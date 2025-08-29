@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torneo_app/services/auth_service.dart';
 import 'package:torneo_app/utils/constants.dart';
+import 'crear_torneo_screen.dart'; // Asegúrate de tener este archivo
 
 class PerfilOrganizadorScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -44,6 +45,8 @@ class PerfilOrganizadorScreen extends StatelessWidget {
               style: TextStyle(color: Constants.primaryColor, fontSize: 18),
             ),
             SizedBox(height: 20),
+
+            // Mensaje de acceso
             Card(
               child: Padding(
                 padding: EdgeInsets.all(15),
@@ -53,7 +56,26 @@ class PerfilOrganizadorScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             SizedBox(height: 30),
+
+            // Botón para crear torneo
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/crear_torneo');
+              },
+              icon: Icon(Icons.add_circle),
+              label: Text('Crear Torneo'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Constants.primaryColor,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+
+            SizedBox(height: 30),
+
+            // Cerrar sesión
             ElevatedButton.icon(
               onPressed: () async {
                 final authService = Provider.of<AuthService>(context, listen: false);

@@ -1,23 +1,30 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // ✅ Para soporte de localización
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart'; // ✅ Para fechas en español
 
 // Pantallas
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/jugador/perfil_jugador.dart';
 import 'screens/organizador/perfil_organizador.dart';
+import 'screens/organizador/crear_torneo_screen.dart';
 
 // Servicios
 import 'services/api_service.dart';
-import 'services/auth_service.dart'; // Asegúrate de tenerlo
+import 'services/auth_service.dart';
 
 // Utilidades
 import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  ApiService.init(); // ✅ Inicializa el servicio API
+  
+  // ✅ Inicializa los datos de fechas en español
+  await initializeDateFormatting('es', null);
+  
+  ApiService.init();
 
   runApp(
     MultiProvider(
@@ -93,7 +100,18 @@ class MyApp extends StatelessWidget {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return PerfilOrganizadorScreen(user: user ?? {});
         },
+        '/crear_torneo': (context) => CrearTorneoScreen(),
       },
+      // ✅ Delegados de localización
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      // ✅ Idioma español
+      supportedLocales: [
+        const Locale('es', ''),
+      ],
     );
   }
 }

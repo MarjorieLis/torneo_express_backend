@@ -1,5 +1,6 @@
 // lib/services/auth_service.dart
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService with ChangeNotifier {
@@ -25,9 +26,13 @@ class AuthService with ChangeNotifier {
 
     if (token != null && userData != null) {
       _token = token;
-      _user = Map<String, dynamic>.from((userData as Map).cast<String, dynamic>());
-      _isAuthenticated = true;
-      notifyListeners();
+      try {
+        _user = Map<String, dynamic>.from((jsonDecode(userData) as Map).cast<String, dynamic>());
+        _isAuthenticated = true;
+        notifyListeners();
+      } catch (e) {
+        print('Error al decodificar user_data: $e');
+      }
     }
   }
 
@@ -40,7 +45,7 @@ class AuthService with ChangeNotifier {
     // Guardar en SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
-    await prefs.setString('user_data', user.toString());
+    await prefs.setString('user_data', jsonEncode(user)); // ✅ Usar jsonEncode
 
     notifyListeners();
   }
