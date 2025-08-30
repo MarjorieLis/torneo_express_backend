@@ -146,6 +146,9 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                     final torneo = torneos[index];
                     final String? id = torneo['_id'] ?? torneo['id'];
                     final String estado = torneo['estado'] ?? 'activo';
+                    final int maxEquipos = torneo['maxEquipos'] ?? 0;
+                    final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
+                    final int equiposRestantes = maxEquipos - equiposRegistrados;
 
                     return Card(
                       margin: EdgeInsets.symmetric(vertical: 8),
@@ -184,7 +187,22 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                     style: TextStyle(color: Colors.white, fontSize: 12),
                                   ),
                                 ),
-                                Spacer(),
+                                SizedBox(width: 8),
+                                Text(
+                                  '$equiposRegistrados/$maxEquipos equipos',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            LinearProgressIndicator(
+                              value: maxEquipos > 0 ? equiposRegistrados / maxEquipos : 0,
+                              backgroundColor: Colors.grey[200],
+                              color: Constants.primaryColor,
+                            ),
+                            SizedBox(height: 10),
+                            Row(
+                              children: [
                                 if (estado == 'activo')
                                   Row(
                                     children: [
@@ -220,7 +238,7 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                     ),
                                   ),
-                                SizedBox(width: 8),
+                                Spacer(),
                                 ElevatedButton.icon(
                                   onPressed: () {
                                     Navigator.push(

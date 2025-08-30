@@ -89,12 +89,26 @@ class PerfilJugadorScreen extends StatelessWidget {
               ),
 
               SizedBox(height: 20),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Torneos disponibles',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Constants.primaryColor),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Torneos disponibles',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Constants.primaryColor),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/seleccionar_torneo');
+                    },
+                    icon: Icon(Icons.add, size: 16),
+                    label: Text('Inscribir', style: TextStyle(fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Constants.primaryColor,
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 10),
 
@@ -119,6 +133,10 @@ class PerfilJugadorScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final torneo = torneos[index];
                       final estado = torneo['estado'] ?? 'activo';
+                      final int maxEquipos = torneo['maxEquipos'] ?? 0;
+                      final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
+                      final int equiposRestantes = maxEquipos - equiposRegistrados;
+
                       return Card(
                         child: Padding(
                           padding: EdgeInsets.all(12),
@@ -131,7 +149,14 @@ class PerfilJugadorScreen extends StatelessWidget {
                               ),
                               SizedBox(height: 5),
                               Text('Disciplina: ${torneo['disciplina'] ?? 'N/A'}'),
-                              Text('Equipos: ${torneo['maxEquipos'] ?? '?'}'),
+                              Text('Equipos: $equiposRegistrados/$maxEquipos'),
+                              LinearProgressIndicator(
+                                value: maxEquipos > 0 ? equiposRegistrados / maxEquipos : 0,
+                                backgroundColor: Colors.grey[200],
+                                color: Constants.primaryColor,
+                              ),
+                              Text('Restantes: $equiposRestantes', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              SizedBox(height: 5),
                               Text(
                                 'Fechas: ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaInicio']))} - ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaFin']))}',
                               ),

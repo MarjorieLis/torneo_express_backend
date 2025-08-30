@@ -8,10 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Pantallas
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/jugador/perfil_jugador.dart';
-import 'screens/organizador/perfil_organizador.dart';
-import 'screens/organizador/crear_torneo_screen.dart';
-import 'screens/organizador/lista_torneos_screen.dart';
+
+// Usa prefijos para evitar conflictos
+import 'screens/jugador/perfil_jugador.dart' as jugador;
+import 'screens/organizador/perfil_organizador.dart' as organizador;
+import 'screens/organizador/crear_torneo_screen.dart' as crear_torneo;
+import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos;
+import 'screens/organizador/detalle_torneo_screen.dart' as detalle_torneo;
+import 'screens/jugador/seleccionar_torneo_screen.dart' as seleccionar;
+import 'screens/jugador/inscribir_equipo_screen.dart' as inscribir;
 
 // Servicios
 import 'services/api_service.dart';
@@ -95,29 +100,36 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-  '/': (context) => const AuthScreen(),
-  '/register': (context) => RegisterScreen(),
-  '/login': (context) => LoginScreen(),
-  '/perfil_jugador': (context) {
-    final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    return PerfilJugadorScreen(user: user ?? {});
-  },
-  '/perfil_organizador': (context) {
-    final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    return PerfilOrganizadorScreen(user: user ?? {});
-  },
-  '/crear_torneo': (context) => CrearTorneoScreen(),
-  '/lista_torneos': (context) => ListaTorneosScreen(),
-  // ✅ Añadir esta ruta
-},
-      // ✅ Soporte para calendario en español
+        '/': (context) => const AuthScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/login': (context) => LoginScreen(),
+        '/perfil_jugador': (context) {
+          final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return jugador.PerfilJugadorScreen(user: user ?? {});
+        },
+        '/perfil_organizador': (context) {
+          final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return organizador.PerfilOrganizadorScreen(user: user ?? {});
+        },
+        '/crear_torneo': (context) => crear_torneo.CrearTorneoScreen(),
+        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(),
+        '/detalle_torneo': (context) {
+          final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return detalle_torneo.DetalleTorneoScreen(torneo: torneo ?? {});
+        },
+        '/seleccionar_torneo': (context) => seleccionar.SeleccionarTorneoScreen(),
+        '/inscribir_equipo': (context) {
+          final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return inscribir.InscribirEquipoScreen(torneo: torneo ?? {});
+        },
+      },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: [
-        const Locale('es', ''), // Español
+        const Locale('es', ''),
       ],
     );
   }

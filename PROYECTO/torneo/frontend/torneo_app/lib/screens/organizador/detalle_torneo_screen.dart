@@ -1,6 +1,5 @@
 // lib/screens/organizador/detalle_torneo_screen.dart
 import 'package:flutter/material.dart';
-import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
 
@@ -12,6 +11,10 @@ class DetalleTorneoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final DateFormat formato = DateFormat('dd/MM/yyyy');
+    final int maxEquipos = torneo['maxEquipos'] ?? 0;
+    final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
+    final int equiposRestantes = maxEquipos - equiposRegistrados;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Detalles del Torneo'),
@@ -55,14 +58,26 @@ class DetalleTorneoScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 15),
-                // Máximo equipos
+                // Equipos máximos
                 Row(
                   children: [
                     Icon(Icons.group, color: Constants.primaryColor),
                     SizedBox(width: 8),
-                    Text('Equipos máximos: ${torneo['maxEquipos']}'),
+                    Text('Equipos máximos: $maxEquipos'),
                   ],
                 ),
+                SizedBox(height: 10),
+                // Equipos registrados
+                Text(
+                  'Equipos registrados: $equiposRegistrados',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                LinearProgressIndicator(
+                  value: maxEquipos > 0 ? equiposRegistrados / maxEquipos : 0,
+                  backgroundColor: Colors.grey[200],
+                  color: Constants.primaryColor,
+                ),
+                Text('Equipos restantes: $equiposRestantes'),
                 SizedBox(height: 15),
                 // Formato
                 Row(
