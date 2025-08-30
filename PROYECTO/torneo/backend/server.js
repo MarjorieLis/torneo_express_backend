@@ -20,6 +20,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/torneos', require('./routes/torneos'));
 app.use('/api/equipos', require('./routes/equipos'));
+app.use('/api/jugadores', require('./routes/jugadores'));
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('API de Torneo UIDE funcionando ✅');
