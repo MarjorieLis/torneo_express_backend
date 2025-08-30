@@ -30,4 +30,6 @@ router.put('/:id/cancelar', auth, cancelarTorneo);
 // PUT /api/torneos/:id/reanudar - RF-007: Reanudar torneo
 router.put('/:id/reanudar', auth, reanudarTorneo); // ✅ Ruta añadida
 
+body('minJugadores', 'Mínimo de jugadores por equipo es obligatorio').isInt({ min: 1 }),
+body('maxJugadores', 'Máximo de jugadores por equipo es obligatorio').isInt({ min: 2 }),
 module.exports = router;

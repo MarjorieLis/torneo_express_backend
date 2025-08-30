@@ -11,7 +11,7 @@ const torneoSchema = new mongoose.Schema({
   disciplina: {
     type: String,
     required: true,
-    enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis'] // ✅ Valores en minúsculas y con tilde
+    enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis', 'atletismo']
   },
   fechaInicio: {
     type: Date,
@@ -26,6 +26,16 @@ const torneoSchema = new mongoose.Schema({
     required: true,
     min: 2
   },
+  minJugadores: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  maxJugadores: {
+    type: Number,
+    required: true,
+    min: 2
+  },
   reglas: {
     type: String,
     required: true
@@ -33,12 +43,12 @@ const torneoSchema = new mongoose.Schema({
   formato: {
     type: String,
     required: true,
-    enum: ['grupos', 'eliminación directa'] // ✅ Valores en minúsculas y con tilde
+    enum: ['grupos', 'eliminación directa', 'mixto']
   },
   estado: {
     type: String,
     default: 'activo',
-    enum: ['activo', 'suspendido', 'cancelado', 'finalizado'] // ✅ Valores en minúsculas
+    enum: ['activo', 'suspendido', 'cancelado', 'finalizado']
   },
   organizador: {
     type: mongoose.Schema.Types.ObjectId,

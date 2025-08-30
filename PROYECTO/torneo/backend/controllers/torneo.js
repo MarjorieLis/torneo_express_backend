@@ -11,11 +11,18 @@ exports.crearTorneo = async (req, res) => {
     fechaInicio,
     fechaFin,
     maxEquipos,
+    minJugadores,
+    maxJugadores,
     reglas,
     formato
   } = req.body;
 
   try {
+    // Validación de campos obligatorios
+    if (!nombre || !disciplina || !fechaInicio || !fechaFin || !maxEquipos || !reglas || !formato) {
+      return res.status(400).json({ msg: 'Todos los campos marcados son obligatorios' });
+    }
+
     // Verificar si ya existe un torneo con ese nombre
     const torneoExistente = await Torneo.findOne({ nombre });
     if (torneoExistente) {
@@ -24,11 +31,20 @@ exports.crearTorneo = async (req, res) => {
       });
     }
 
-    // Verificar solapamiento de fechas
-    const torneos = await Torneo.find();
+    // Validación de fechas
     const nuevaFechaInicio = new Date(fechaInicio);
     const nuevaFechaFin = new Date(fechaFin);
 
+    if (isNaN(nuevaFechaInicio.getTime()) || isNaN(nuevaFechaFin.getTime())) {
+      return res.status(400).json({ msg: 'Fechas inválidas' });
+    }
+
+    if (nuevaFechaInicio >= nuevaFechaFin) {
+      return res.status(400).json({ msg: 'La fecha de inicio debe ser anterior a la de fin' });
+    }
+
+    // Verificar solapamiento de fechas
+    const torneos = await Torneo.find();
     const torneoSolapado = torneos.some(t => {
       const tInicio = new Date(t.fechaInicio);
       const tFin = new Date(t.fechaFin);
@@ -45,6 +61,15 @@ exports.crearTorneo = async (req, res) => {
       });
     }
 
+    // Validación de jugadores
+    if (minJugadores == null || maxJugadores == null) {
+      return res.status(400).json({ msg: 'Mínimo y máximo de jugadores por equipo son obligatorios' });
+    }
+
+    if (minJugadores < 1 || maxJugadores < 2 || minJugadores > maxJugadores) {
+      return res.status(400).json({ msg: 'Valores de jugadores no válidos' });
+    }
+
     // Crear nuevo torneo
     const nuevoTorneo = new Torneo({
       nombre,
@@ -52,6 +77,8 @@ exports.crearTorneo = async (req, res) => {
       fechaInicio,
       fechaFin,
       maxEquipos,
+      minJugadores,
+      maxJugadores,
       reglas,
       formato,
       estado: 'activo',
@@ -75,7 +102,6 @@ exports.crearTorneo = async (req, res) => {
  */
 exports.listarTorneos = async (req, res) => {
   try {
-    // Filtra solo torneos activos y públicos
     const torneos = await Torneo.find({
       estado: 'activo',
       visibilidad: 'pública'
@@ -99,12 +125,10 @@ exports.suspenderTorneo = async (req, res) => {
       return res.status(404).json({ msg: 'Torneo no encontrado' });
     }
 
-    // Verificar que el organizador sea el dueño
     if (torneo.organizador.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'No autorizado' });
     }
 
-    // No se puede suspender si ya está cancelado o finalizado
     if (['cancelado', 'finalizado'].includes(torneo.estado)) {
       return res.status(400).json({ msg: 'No se puede suspender un torneo cancelado o finalizado' });
     }
@@ -129,12 +153,10 @@ exports.cancelarTorneo = async (req, res) => {
       return res.status(404).json({ msg: 'Torneo no encontrado' });
     }
 
-    // Verificar que el organizador sea el dueño
     if (torneo.organizador.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'No autorizado' });
     }
 
-    // No se puede cancelar si ya está finalizado
     if (torneo.estado === 'finalizado') {
       return res.status(400).json({ msg: 'No se puede cancelar un torneo finalizado' });
     }
@@ -159,12 +181,10 @@ exports.reanudarTorneo = async (req, res) => {
       return res.status(404).json({ msg: 'Torneo no encontrado' });
     }
 
-    // Verificar que el organizador sea el dueño
     if (torneo.organizador.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'No autorizado' });
     }
 
-    // Solo se puede reanudar si está suspendido
     if (torneo.estado !== 'suspendido') {
       return res.status(400).json({ msg: 'Solo se puede reanudar un torneo suspendido' });
     }
