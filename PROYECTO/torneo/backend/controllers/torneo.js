@@ -75,8 +75,13 @@ exports.crearTorneo = async (req, res) => {
  */
 exports.listarTorneos = async (req, res) => {
   try {
-    const torneos = await Torneo.find({ organizador: req.user.id })
+    // Filtra solo torneos activos y públicos
+    const torneos = await Torneo.find({
+      estado: 'activo',
+      visibilidad: 'pública'
+    })
       .sort({ createdAt: -1 });
+
     res.json({ data: torneos });
   } catch (err) {
     console.error('Error al listar torneos:', err.message);
