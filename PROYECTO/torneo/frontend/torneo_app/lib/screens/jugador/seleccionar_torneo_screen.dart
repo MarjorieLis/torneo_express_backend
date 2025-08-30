@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
+import 'package:torneo_app/utils/helpers.dart'; // ✅ Solo esta importación
 
 class SeleccionarTorneoScreen extends StatefulWidget {
   @override
@@ -10,28 +11,34 @@ class SeleccionarTorneoScreen extends StatefulWidget {
 }
 
 class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
-  List torneos = [];
+  List<Map<String, dynamic>> torneos = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    // ✅ Prueba inmediata
+    print('🔧 Prueba: ${capitalize("voleibol")}'); // Debe imprimir "Voleibol"
     _cargarTorneos();
   }
 
   Future<void> _cargarTorneos() async {
     try {
       final response = await ApiService.get('/torneos');
-      print('🔍 Respuesta de /torneos: $response'); // ✅ Depuración
+      print('🔍 Respuesta de /torneos: $response');
+
+      List data = [];
+
+      if (response.data is List) {
+        data = response.data;
+      } else if (response.data is Map && response.data.containsKey('torneos')) {
+        data = response.data['torneos'];
+      } else if (response.data is Map && response.data.containsKey('data')) {
+        data = response.data['data'];
+      }
 
       setState(() {
-        if (response.data is List) {
-          torneos = response.data;
-        } else if (response.data is Map && response.data.containsKey('data')) {
-          torneos = response.data['data'];
-        } else {
-          torneos = [];
-        }
+        torneos = data.cast<Map<String, dynamic>>();
         _isLoading = false;
       });
     } catch (e) {
@@ -60,6 +67,10 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                     final torneo = torneos[index];
                     final inicio = _parseFecha(torneo['fechaInicio']);
                     final fin = _parseFecha(torneo['fechaFin']);
+                    final int maxEquipos = torneo['maxEquipos'] ?? 0;
+                    final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
+                    final int equiposRestantes = maxEquipos - equiposRegistrados;
+                    final String? categoria = torneo['categoria'];
 
                     return Card(
                       child: Padding(
@@ -68,15 +79,32 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              torneo['nombre'],
+                              torneo['nombre'] ?? 'Sin nombre',
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 5),
-                            Text('Disciplina: ${torneo['disciplina']}'),
-                            Text('Equipos: ${torneo['maxEquipos']}'),
+                            // ✅ Usa la función global
+                            Text('Disciplina: ${capitalize(torneo['disciplina'])}'),
+                            Text('Equipos: $equiposRegistrados / $maxEquipos'),
+                            if (equiposRestantes > 0)
+                              Text('Restantes: $equiposRestantes', style: TextStyle(color: Colors.green))
+                            else
+                              Text('¡Lleno!', style: TextStyle(color: Colors.red)),
                             Text(
                               'Fechas: ${inicio != null ? DateFormat('dd/MM').format(inicio) : 'Inválida'} - ${fin != null ? DateFormat('dd/MM').format(fin) : 'Inválida'}',
                             ),
+                            SizedBox(height: 10),
+                            // ✅ Usa la función global
+                            if (categoria != null)
+                              Text(
+                                'Categoría: ${capitalize(categoria)}',
+                                style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold),
+                              )
+                            else
+                              Text(
+                                'Categoría: No definida',
+                                style: TextStyle(color: Colors.orange),
+                              ),
                             SizedBox(height: 10),
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -122,8 +150,8 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
     return null;
   }
 
-  Color _getColorPorEstado(String estado) {
-    switch (estado) {
+  Color _getColorPorEstado(String? estado) {
+    switch (estado?.toLowerCase()) {
       case 'activo':
         return Colors.green;
       case 'suspendido':

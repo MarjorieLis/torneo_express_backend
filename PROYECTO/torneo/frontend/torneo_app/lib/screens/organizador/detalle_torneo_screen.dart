@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
-import 'package:torneo_app/utils/extensions.dart';
+import 'package:torneo_app/utils/helpers.dart'; // ✅ Usa helpers.dart
 
 class DetalleTorneoScreen extends StatelessWidget {
   final Map<String, dynamic> torneo;
@@ -51,14 +51,14 @@ class DetalleTorneoScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
 
-                // ✅ Mostrar categoría
+                // ✅ Mostrar categoría usando función global
                 if (categoria != null)
                   Row(
                     children: [
                       Icon(Icons.group, color: Constants.primaryColor),
                       SizedBox(width: 8),
                       Text(
-                        'Categoría: ${categoria.capitalize()}',
+                        'Categoría: ${capitalize(categoria)}',
                         style: TextStyle(fontSize: 16),
                       ),
                     ],
@@ -112,7 +112,7 @@ class DetalleTorneoScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.format_list_bulleted, color: Constants.primaryColor),
                     SizedBox(width: 8),
-                    Text('Formato: ${_capitalize(torneo['formato'] ?? 'N/A')}'),
+                    Text('Formato: ${capitalize(torneo['formato'] ?? 'N/A')}'),
                   ],
                 ),
                 SizedBox(height: 15),
@@ -174,11 +174,6 @@ class DetalleTorneoScreen extends StatelessWidget {
     } catch (e) {
       return 'Fechas no válidas';
     }
-  }
-
-  String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
   Color _getColorPorEstado(String? estado) {
