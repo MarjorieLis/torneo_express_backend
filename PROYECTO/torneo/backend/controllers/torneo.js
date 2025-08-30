@@ -143,3 +143,33 @@ exports.cancelarTorneo = async (req, res) => {
     res.status(500).send('Error en el servidor');
   }
 };
+
+/**
+ * PUT /api/torneos/:id/reanudar - RF-007: Reanudar torneo
+ */
+exports.reanudarTorneo = async (req, res) => {
+  try {
+    const torneo = await Torneo.findById(req.params.id);
+    if (!torneo) {
+      return res.status(404).json({ msg: 'Torneo no encontrado' });
+    }
+
+    // Verificar que el organizador sea el dueño
+    if (torneo.organizador.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'No autorizado' });
+    }
+
+    // Solo se puede reanudar si está suspendido
+    if (torneo.estado !== 'suspendido') {
+      return res.status(400).json({ msg: 'Solo se puede reanudar un torneo suspendido' });
+    }
+
+    torneo.estado = 'activo';
+    await torneo.save();
+
+    res.json({ msg: 'Torneo reanudado correctamente', torneo });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Error en el servidor');
+  }
+};
