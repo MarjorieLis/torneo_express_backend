@@ -8,6 +8,7 @@ exports.crearTorneo = async (req, res) => {
   const {
     nombre,
     disciplina,
+    categoria,
     fechaInicio,
     fechaFin,
     maxEquipos,
@@ -19,8 +20,13 @@ exports.crearTorneo = async (req, res) => {
 
   try {
     // Validación de campos obligatorios
-    if (!nombre || !disciplina || !fechaInicio || !fechaFin || !maxEquipos || !reglas || !formato) {
+    if (!nombre || !disciplina || !categoria || !fechaInicio || !fechaFin || !maxEquipos || !minJugadores || !maxJugadores || !reglas || !formato) {
       return res.status(400).json({ msg: 'Todos los campos marcados son obligatorios' });
+    }
+
+    // Validar categoría
+    if (!['masculino', 'femenino', 'mixto'].includes(categoria)) {
+      return res.status(400).json({ msg: 'Categoría inválida. Usa: masculino, femenino o mixto' });
     }
 
     // Verificar si ya existe un torneo con ese nombre
@@ -62,18 +68,15 @@ exports.crearTorneo = async (req, res) => {
     }
 
     // Validación de jugadores
-    if (minJugadores == null || maxJugadores == null) {
-      return res.status(400).json({ msg: 'Mínimo y máximo de jugadores por equipo son obligatorios' });
-    }
-
     if (minJugadores < 1 || maxJugadores < 2 || minJugadores > maxJugadores) {
       return res.status(400).json({ msg: 'Valores de jugadores no válidos' });
     }
 
-    // Crear nuevo torneo
+    // ✅ Crear nuevo torneo con TODOS los campos
     const nuevoTorneo = new Torneo({
       nombre,
       disciplina,
+      categoria, // ✅ Aseguramos que se incluya
       fechaInicio,
       fechaFin,
       maxEquipos,
@@ -108,7 +111,7 @@ exports.listarTorneos = async (req, res) => {
     })
       .sort({ createdAt: -1 });
 
-    res.json({ data: torneos });
+    res.json({ torneos });
   } catch (err) {
     console.error('Error al listar torneos:', err.message);
     res.status(500).send('Error en el servidor');

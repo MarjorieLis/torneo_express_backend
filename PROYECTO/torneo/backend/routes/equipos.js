@@ -10,10 +10,13 @@ const reglasDisciplina = {
   'fútbol': { min: 11, max: 18 },
   'baloncesto': { min: 5, max: 12 },
   'voleibol': { min: 6, max: 12 },
-  'tenis': { min: 1, max: 2 },
-  'atletismo': { min: 1, max: 5 }
+  'tenis': { min: 1, max: 2 }
+  // 'atletismo' removido si no se usa
 };
 
+/**
+ * POST /api/equipos - RF-002: Registrar equipo
+ */
 router.post('/', auth, async (req, res) => {
   const { nombre, disciplina, torneoId, capitan, jugadores } = req.body;
 
@@ -40,31 +43,36 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
-    // Resto de validaciones (duplicados, nombre, etc.)
+    // Verificar si ya existe un equipo con ese nombre en el torneo
     const equipoExistente = await Equipo.findOne({ nombre, torneoId });
     if (equipoExistente) {
       return res.status(400).json({ msg: 'Ya existe un equipo con ese nombre' });
     }
 
-    // Validación de jugadores duplicados (como antes)
-    const otrosEquipos = await Equipo.find({ torneoId, _id: { $ne: equipoId } });
+    // Obtener todos los equipos del torneo (excepto este)
+    const otrosEquipos = await Equipo.find({ torneoId });
     const cedulasExistentes = new Set();
-    otrosEquipos.forEach(e => {
-      if (e.capitan?.cedula) cedulasExistentes.add(e.capitan.cedula);
-      if (Array.isArray(e.jugadores)) {
-        e.jugadores.forEach(j => {
+
+    otrosEquipos.forEach(equipo => {
+      if (equipo.capitan?.cedulaCapitan) {
+        cedulasExistentes.add(equipo.capitan.cedulaCapitan);
+      }
+      if (Array.isArray(equipo.jugadores)) {
+        equipo.jugadores.forEach(j => {
           const match = j.match(/\(([^)]+)\)/);
           if (match) cedulasExistentes.add(match[1]);
         });
       }
     });
 
-    if (capitan?.cedula && cedulasExistentes.has(capitan.cedula)) {
+    // Validar que el capitán no esté ya inscrito
+    if (capitan?.cedulaCapitan && cedulasExistentes.has(capitan.cedulaCapitan)) {
       return res.status(400).json({ 
-        msg: `El jugador con cédula ${capitan.cedula} ya está inscrito` 
+        msg: `El capitán con cédula ${capitan.cedulaCapitan} ya está inscrito en otro equipo` 
       });
     }
 
+    // Crear nuevo equipo
     const nuevoEquipo = new Equipo({
       nombre,
       disciplina,
@@ -77,7 +85,10 @@ router.post('/', auth, async (req, res) => {
     await nuevoEquipo.save();
     res.status(201).json(nuevoEquipo);
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error en POST /api/equipos:', err.message);
     res.status(500).send('Error en el servidor');
   }
 });
+
+// ✅ Exportar el router
+module.exports = router;

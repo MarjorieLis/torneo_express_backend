@@ -11,7 +11,13 @@ const torneoSchema = new mongoose.Schema({
   disciplina: {
     type: String,
     required: true,
-    enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis', 'atletismo']
+    enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis'] // ✅ Removido 'atletismo'
+  },
+  categoria: {
+    type: String,
+    required: true,
+    enum: ['masculino', 'femenino', 'mixto'],
+    default: 'mixto'
   },
   fechaInicio: {
     type: Date,
