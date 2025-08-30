@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
+import 'package:torneo_app/utils/disciplina_rules.dart';
 
 class InscribirEquipoScreen extends StatefulWidget {
   final Map<String, dynamic> torneo;
@@ -21,7 +22,10 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   final _cedulaJugadorController = TextEditingController();
 
   List<Map<String, String>> _jugadores = [];
+  Set<String> _cedulasUsadas = {};
   String? _disciplina;
+  int _minJugadores = 1;
+  int _maxJugadores = 15;
 
   bool _isLoading = false;
 
@@ -29,29 +33,92 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   void initState() {
     super.initState();
     _disciplina = widget.torneo['disciplina'];
+    // Usar reglas del torneo si están definidas, si no, usar reglas por defecto
+    _minJugadores = widget.torneo['minJugadores'] ?? DisciplinaRules.minJugadores(_disciplina!);
+    _maxJugadores = widget.torneo['maxJugadores'] ?? DisciplinaRules.maxJugadores(_disciplina!);
+    _cargarJugadoresExistentes();
+  }
+
+  Future<void> _cargarJugadoresExistentes() async {
+    try {
+      final response = await ApiService.get('/equipos/torneo/${widget.torneo['_id']}/inscritos');
+      if (response.statusCode == 200 && response.data is List) {
+        setState(() {
+          _cedulasUsadas = response.data.map((c) => c.toString()).toSet();
+        });
+      }
+    } catch (e) {
+      print('Error al cargar jugadores existentes: $e');
+    }
   }
 
   void _agregarJugador() {
-    if (_nombreJugadorController.text.isNotEmpty && _cedulaJugadorController.text.isNotEmpty) {
-      setState(() {
-        _jugadores.add({
-          'nombre': _nombreJugadorController.text,
-          'cedula': _cedulaJugadorController.text
-        });
-        _nombreJugadorController.clear();
-        _cedulaJugadorController.clear();
-      });
+    final nombre = _nombreJugadorController.text.trim();
+    final cedula = _cedulaJugadorController.text.trim();
+
+    if (nombre.isEmpty || cedula.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nombre y cédula son obligatorios')),
+      );
+      return;
     }
+
+    if (_jugadores.length >= _maxJugadores) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pueden agregar más de $_maxJugadores jugadores para $_disciplina')),
+      );
+      return;
+    }
+
+    if (_cedulasUsadas.contains(cedula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('El jugador con cédula $cedula ya está inscrito en otro equipo')),
+      );
+      return;
+    }
+
+    setState(() {
+      _jugadores.add({'nombre': nombre, 'cedula': cedula});
+      _cedulasUsadas.add(cedula);
+      _nombreJugadorController.clear();
+      _cedulaJugadorController.clear();
+    });
   }
 
   void _eliminarJugador(int index) {
     setState(() {
+      final cedula = _jugadores[index]['cedula'];
+      _cedulasUsadas.remove(cedula);
       _jugadores.removeAt(index);
     });
   }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
+      final totalJugadores = _jugadores.length + 1; // +1 por el capitán
+
+      if (totalJugadores < _minJugadores) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Se requieren al menos $_minJugadores jugadores para $_disciplina (incluido el capitán)')),
+        );
+        return;
+      }
+
+      if (totalJugadores > _maxJugadores) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Máximo permitido: $_maxJugadores jugadores para $_disciplina')),
+        );
+        return;
+      }
+
+      final capitanCedula = _cedulaCapitanController.text.trim();
+      if (_cedulasUsadas.contains(capitanCedula) && !_jugadores.any((j) => j['cedula'] == capitanCedula)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('El capitán con cédula $capitanCedula ya está inscrito en otro equipo')),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
 
       final data = {
@@ -59,8 +126,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         'disciplina': _disciplina,
         'torneoId': widget.torneo['_id'],
         'capitan': {
-          'nombre': _capitanController.text,
-          'cedula': _cedulaCapitanController.text,
+          'nombre': _capitanController.text.trim(),
+          'cedula': capitanCedula,
         },
         'jugadores': _jugadores.map((j) => '${j['nombre']} (${j['cedula']})').toList(),
         'estado': 'pendiente'
@@ -74,13 +141,14 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
           );
           Navigator.pop(context);
         } else {
+          final errorMsg = response.data['msg'] ?? 'Error al inscribir equipo';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${response.data['msg'] ?? 'Desconocido'}')),
+            SnackBar(content: Text('❌ $errorMsg')),
           );
         }
       } on Exception catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error: $e')),
+          SnackBar(content: Text('❌ Error de conexión: $e')),
         );
       } finally {
         setState(() => _isLoading = false);
@@ -90,6 +158,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final totalJugadores = _jugadores.length + 1;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Inscribir Equipo - ${widget.torneo['nombre']}'),
@@ -145,6 +215,29 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
               ),
               SizedBox(height: 20),
 
+              // Reglas de la disciplina
+              Card(
+                color: Colors.blue[50],
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Text(
+                    '$_disciplina: Mínimo $_minJugadores, Máximo $_maxJugadores jugadores por equipo',
+                    style: TextStyle(color: Colors.blue[900]),
+                  ),
+                ),
+              ),
+              SizedBox(height: 15),
+
+              // Contador de jugadores
+              Text(
+                'Jugadores: $totalJugadores / $_maxJugadores',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: totalJugadores >= _maxJugadores ? Colors.red : Colors.green,
+                ),
+              ),
+              SizedBox(height: 15),
+
               // Sección: Agregar otros jugadores
               Text(
                 'Agregar Jugadores',
@@ -181,7 +274,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
               ),
               SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: _agregarJugador,
+                onPressed: _jugadores.length >= _maxJugadores ? null : _agregarJugador,
                 icon: Icon(Icons.add),
                 label: Text('Agregar'),
                 style: ElevatedButton.styleFrom(

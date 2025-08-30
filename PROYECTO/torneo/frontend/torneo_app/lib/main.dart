@@ -11,7 +11,8 @@ import 'screens/jugador/perfil_jugador.dart';
 import 'screens/organizador/perfil_organizador.dart';
 import 'screens/organizador/crear_torneo_screen.dart';
 import 'screens/jugador/seleccionar_torneo_screen.dart';
-import 'screens/jugador/inscribir_equipo_screen.dart'; // 👈 Nueva pantalla
+import 'screens/jugador/inscribir_equipo_screen.dart';
+import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos; // 👈 Importa con alias
 
 // Servicios
 import 'services/api_service.dart';
@@ -105,6 +106,7 @@ class MyApp extends StatelessWidget {
           final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return InscribirEquipoScreen(torneo: torneo ?? {});
         },
+        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(), // ✅ Ruta añadida
       },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
