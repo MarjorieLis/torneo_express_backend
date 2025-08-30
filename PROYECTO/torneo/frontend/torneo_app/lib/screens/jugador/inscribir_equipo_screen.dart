@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
+import 'seleccionar_jugadores_screen.dart'; // ✅ Importa el nuevo widget
 
 class InscribirEquipoScreen extends StatefulWidget {
   final Map<String, dynamic> torneo;
@@ -17,6 +18,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   final _nombreController = TextEditingController();
   final _cedulaController = TextEditingController();
   String? _disciplina;
+  List<String> _jugadoresSeleccionados = [];
 
   @override
   void initState() {
@@ -76,7 +78,66 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
               ),
               SizedBox(height: 20),
 
-              // Botón
+              // Botón para seleccionar jugadores
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SeleccionarJugadoresScreen(
+                        disciplina: _disciplina!,
+                        cedulaCapitan: _cedulaController.text,
+                      ),
+                    ),
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      _jugadoresSeleccionados = result;
+                    });
+                  }
+                },
+                icon: Icon(Icons.people),
+                label: Text('Seleccionar Jugadores'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Constants.primaryColor,
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+
+              // Mostrar jugadores seleccionados
+              if (_jugadoresSeleccionados.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 15),
+                    Text(
+                      'Jugadores seleccionados (${_jugadoresSeleccionados.length})',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: _jugadoresSeleccionados.map((id) {
+                        return Chip(
+                          label: Text('Jugador $id'),
+                          deleteIcon: Icon(Icons.close),
+                          onDeleted: () {
+                            setState(() {
+                              _jugadoresSeleccionados.remove(id);
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+
+              SizedBox(height: 20),
+
+              // Botón final
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
@@ -84,6 +145,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
                       'nombre': _nombreController.text,
                       'disciplina': _disciplina,
                       'cedulaCapitan': _cedulaController.text,
+                      'jugadores': _jugadoresSeleccionados,
                       'torneoId': widget.torneo['_id']
                     };
 

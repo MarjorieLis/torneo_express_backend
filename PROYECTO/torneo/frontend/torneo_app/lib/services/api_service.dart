@@ -5,60 +5,67 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static final Dio _dio = Dio();
 
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  static const String baseUrl = 'http://10.0.2.2:5000/api'; // ✅ Emulador Android
 
   static void init() {
-  _dio.options
-    ..baseUrl = baseUrl
-    ..connectTimeout = const Duration(seconds: 30) // ✅ Aumentado
-    ..receiveTimeout = const Duration(seconds: 30) // ✅ Aumentado
-    ..headers = {
-      'Content-Type': 'application/json',
-    };
+    _dio.options
+      ..baseUrl = baseUrl
+      ..connectTimeout = const Duration(seconds: 30)
+      ..receiveTimeout = const Duration(seconds: 30)
+      ..headers = {
+        'Content-Type': 'application/json',
+      };
 
-  _dio.interceptors.add(
-    InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await _getToken();
-        print('🔍 Token en petición: $token');
-        if (token != null) {
-          options.headers['x-auth-token'] = token;
-        }
-        handler.next(options);
-      },
-    ),
-  );
-}
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final prefs = await SharedPreferences.getInstance();
+          final token = prefs.getString('auth_token');
+          print('🔍 Enviando token en header: $token'); // ✅ Depuración
+
+          if (token != null) {
+            options.headers['x-auth-token'] = token; // ✅ Clave: debe ser 'x-auth-token'
+          }
+
+          handler.next(options);
+        },
+        onError: (DioError e, handler) {
+          print('❌ Error en API: ${e.message}');
+          if (e.response?.statusCode == 401) {
+            // Opcional: redirigir a login si el token es inválido
+          }
+          handler.next(e);
+        },
+      ),
+    );
+  }
 
   static Future<Response> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(endpoint, queryParameters: queryParameters);
+      print('✅ GET exitoso: $endpoint');
       return response;
     } on DioError catch (e) {
       _handleError(e);
       rethrow;
-    } catch (e) {
-      print('❌ Error inesperado: $e');
-      throw Exception('Error desconocido: $e');
     }
   }
 
   static Future<Response> post(String endpoint, Map<String, dynamic> data) async {
     try {
       final response = await _dio.post(endpoint, data: data);
+      print('✅ POST exitoso: $endpoint');
       return response;
     } on DioError catch (e) {
       _handleError(e);
       rethrow;
-    } catch (e) {
-      print('❌ Error inesperado: $e');
-      throw Exception('Error desconocido: $e');
     }
   }
 
   static Future<Response> put(String endpoint, Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(endpoint, data: data);
+      print('✅ PUT exitoso: $endpoint');
       return response;
     } on DioError catch (e) {
       _handleError(e);
@@ -84,12 +91,5 @@ class ApiService {
     } else {
       throw Exception('Error desconocido: ${e.message}');
     }
-  }
-
-  static Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    print('🔐 Token obtenido: $token');
-    return token;
   }
 }

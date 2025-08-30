@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
-import 'inscribir_equipo_screen.dart';
 
 class SeleccionarTorneoScreen extends StatefulWidget {
   @override

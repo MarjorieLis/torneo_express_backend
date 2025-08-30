@@ -28,13 +28,10 @@ import 'utils/constants.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Inicializa SharedPreferences
-  final prefs = await SharedPreferences.getInstance();
-
   // ✅ Inicializa datos de fecha en español
   await initializeDateFormatting('es', null);
 
-  // ✅ Inicializa el servicio API
+  // ✅ Inicializa ApiService
   ApiService.init();
 
   runApp(
@@ -135,6 +132,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ✅ Definición correcta del widget
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
 
