@@ -22,6 +22,8 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
   Future<void> _cargarTorneos() async {
     try {
       final response = await ApiService.get('/torneos');
+      print('🔍 Respuesta de /torneos: $response'); // ✅ Depuración
+
       setState(() {
         if (response.data is List) {
           torneos = response.data;
@@ -56,6 +58,9 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                   itemCount: torneos.length,
                   itemBuilder: (context, index) {
                     final torneo = torneos[index];
+                    final inicio = _parseFecha(torneo['fechaInicio']);
+                    final fin = _parseFecha(torneo['fechaFin']);
+
                     return Card(
                       child: Padding(
                         padding: EdgeInsets.all(15),
@@ -70,7 +75,7 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                             Text('Disciplina: ${torneo['disciplina']}'),
                             Text('Equipos: ${torneo['maxEquipos']}'),
                             Text(
-                              'Fechas: ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaInicio']))} - ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaFin']))}',
+                              'Fechas: ${inicio != null ? DateFormat('dd/MM').format(inicio) : 'Inválida'} - ${fin != null ? DateFormat('dd/MM').format(fin) : 'Inválida'}',
                             ),
                             SizedBox(height: 10),
                             Container(
@@ -104,6 +109,17 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                   },
                 ),
     );
+  }
+
+  DateTime? _parseFecha(dynamic fecha) {
+    if (fecha == null) return null;
+    if (fecha is String) {
+      return DateTime.tryParse(fecha);
+    }
+    if (fecha is DateTime) {
+      return fecha;
+    }
+    return null;
   }
 
   Color _getColorPorEstado(String estado) {

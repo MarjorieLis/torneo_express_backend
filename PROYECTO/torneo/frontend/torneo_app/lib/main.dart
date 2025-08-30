@@ -3,20 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // Pantallas
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/login_screen.dart';
-
-// Usa prefijos para evitar conflictos
-import 'screens/jugador/perfil_jugador.dart' as jugador;
-import 'screens/organizador/perfil_organizador.dart' as organizador;
-import 'screens/organizador/crear_torneo_screen.dart' as crear_torneo;
-import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos;
-import 'screens/organizador/detalle_torneo_screen.dart' as detalle_torneo;
-import 'screens/jugador/seleccionar_torneo_screen.dart' as seleccionar;
-import 'screens/jugador/inscribir_equipo_screen.dart' as inscribir;
+import 'screens/jugador/perfil_jugador.dart';
+import 'screens/organizador/perfil_organizador.dart';
+import 'screens/organizador/crear_torneo_screen.dart';
+import 'screens/jugador/seleccionar_torneo_screen.dart';
+import 'screens/jugador/inscribir_equipo_screen.dart'; // 👈 Nueva pantalla
 
 // Servicios
 import 'services/api_service.dart';
@@ -27,11 +22,7 @@ import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Inicializa datos de fecha en español
   await initializeDateFormatting('es', null);
-
-  // ✅ Inicializa ApiService
   ApiService.init();
 
   runApp(
@@ -102,22 +93,17 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/perfil_jugador': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return jugador.PerfilJugadorScreen(user: user ?? {});
+          return PerfilJugadorScreen(user: user ?? {});
         },
         '/perfil_organizador': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return organizador.PerfilOrganizadorScreen(user: user ?? {});
+          return PerfilOrganizadorScreen(user: user ?? {});
         },
-        '/crear_torneo': (context) => crear_torneo.CrearTorneoScreen(),
-        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(),
-        '/detalle_torneo': (context) {
-          final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return detalle_torneo.DetalleTorneoScreen(torneo: torneo ?? {});
-        },
-        '/seleccionar_torneo': (context) => seleccionar.SeleccionarTorneoScreen(),
+        '/crear_torneo': (context) => CrearTorneoScreen(),
+        '/seleccionar_torneo': (context) => SeleccionarTorneoScreen(),
         '/inscribir_equipo': (context) {
           final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return inscribir.InscribirEquipoScreen(torneo: torneo ?? {});
+          return InscribirEquipoScreen(torneo: torneo ?? {});
         },
       },
       localizationsDelegates: [
@@ -132,7 +118,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ✅ Definición correcta del widget
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
 

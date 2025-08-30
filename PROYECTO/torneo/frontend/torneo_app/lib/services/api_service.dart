@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static final Dio _dio = Dio();
 
-  static const String baseUrl = 'http://10.0.2.2:5000/api'; // ✅ Emulador Android
+  static const String baseUrl = 'http://192.168.0.8:5000/api';
 
   static void init() {
     _dio.options
@@ -21,10 +21,10 @@ class ApiService {
         onRequest: (options, handler) async {
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString('auth_token');
-          print('🔍 Enviando token en header: $token'); // ✅ Depuración
+          print('🔍 Enviando token en header: $token');
 
           if (token != null) {
-            options.headers['x-auth-token'] = token; // ✅ Clave: debe ser 'x-auth-token'
+            options.headers['x-auth-token'] = token;
           }
 
           handler.next(options);
@@ -32,7 +32,7 @@ class ApiService {
         onError: (DioError e, handler) {
           print('❌ Error en API: ${e.message}');
           if (e.response?.statusCode == 401) {
-            // Opcional: redirigir a login si el token es inválido
+            // Opcional: redirigir a login
           }
           handler.next(e);
         },
@@ -43,7 +43,7 @@ class ApiService {
   static Future<Response> get(String endpoint, {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(endpoint, queryParameters: queryParameters);
-      print('✅ GET exitoso: $endpoint');
+      print('✅ GET exitoso: $endpoint -> ${response.data}');
       return response;
     } on DioError catch (e) {
       _handleError(e);

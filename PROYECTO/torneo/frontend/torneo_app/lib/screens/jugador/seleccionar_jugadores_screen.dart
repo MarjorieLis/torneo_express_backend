@@ -25,25 +25,27 @@ class _SeleccionarJugadoresScreenState extends State<SeleccionarJugadoresScreen>
   }
 
   Future<void> _cargarJugadores() async {
-    try {
-      final response = await ApiService.get('/jugadores');
-      setState(() {
-        if (response.data is List) {
-          jugadores = List<Map<String, dynamic>>.from(response.data);
-        } else if (response.data is Map && response.data.containsKey('data')) {
-          jugadores = List<Map<String, dynamic>>.from(response.data['data']);
-        } else {
-          jugadores = [];
-        }
-        _isLoading = false;
-      });
-    } on Exception catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar jugadores: $e')),
-      );
-    }
+  try {
+    // ✅ CORREGIDO: Añade '/api' antes de '/jugadores'
+    final response = await ApiService.get('/api/jugadores');
+
+    setState(() {
+      if (response.data is List) {
+        jugadores = List<Map<String, dynamic>>.from(response.data);
+      } else if (response.data is Map && response.data.containsKey('data')) {
+        jugadores = List<Map<String, dynamic>>.from(response.data['data']);
+      } else {
+        jugadores = [];
+      }
+      _isLoading = false;
+    });
+  } on Exception catch (e) {
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error al cargar jugadores: $e')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
