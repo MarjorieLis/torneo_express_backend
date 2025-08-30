@@ -75,8 +75,9 @@ exports.crearTorneo = async (req, res) => {
  */
 exports.listarTorneos = async (req, res) => {
   try {
-    const torneos = await Torneo.find().populate('organizador', 'name email');
-    res.json({ data: torneos }); // ✅ Envuelve en { data: [...] }
+    const torneos = await Torneo.find({ organizador: req.user.id })
+      .sort({ createdAt: -1 });
+    res.json({ data: torneos });
   } catch (err) {
     console.error('Error al listar torneos:', err.message);
     res.status(500).send('Error en el servidor');
