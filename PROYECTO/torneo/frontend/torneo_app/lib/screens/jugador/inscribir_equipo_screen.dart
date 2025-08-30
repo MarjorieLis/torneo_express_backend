@@ -127,7 +127,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         'torneoId': widget.torneo['_id'],
         'capitan': {
           'nombre': _capitanController.text.trim(),
-          'cedula': capitanCedula,
+          'cedulaCapitan': capitanCedula, // ✅ Correcto: cedulaCapitan
         },
         'jugadores': _jugadores.map((j) => '${j['nombre']} (${j['cedula']})').toList(),
         'estado': 'pendiente'
@@ -143,7 +143,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         } else {
           final errorMsg = response.data['msg'] ?? 'Error al inscribir equipo';
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('❌ $errorMsg')),
+            SnackBar(content: Text('❌ $errorMsg')), // ✅ Corregido: $errorMsg, no $errors
           );
         }
       } on Exception catch (e) {
@@ -215,13 +215,13 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
               ),
               SizedBox(height: 20),
 
-              // Reglas de la disciplina
+              // Categoría del torneo
               Card(
                 color: Colors.blue[50],
                 child: Padding(
                   padding: EdgeInsets.all(12),
                   child: Text(
-                    '$_disciplina: Mínimo $_minJugadores, Máximo $_maxJugadores jugadores por equipo',
+                    '${widget.torneo['categoria'] != null ? widget.torneo['categoria'].toString().capitalize() : 'N/A'} • $_disciplina: $_minJugadores - $_maxJugadores jugadores', 
                     style: TextStyle(color: Colors.blue[900]),
                   ),
                 ),
@@ -339,5 +339,12 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         ),
       ),
     );
+  }
+}
+
+// ✅ Extensión añadida aquí para que funcione capitalize()
+extension StringExtension on String {
+  String capitalize() {
+    return isEmpty ? this : "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
