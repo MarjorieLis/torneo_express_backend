@@ -2,7 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const { check, body } = require('express-validator'); // ✅ Importar 'body'
+const { check, body } = require('express-validator');
+
 const { 
   crearTorneo, 
   listarTorneos,
@@ -17,8 +18,8 @@ const {
 router.post('/', auth, [
   check('nombre', 'El nombre es obligatorio').not().isEmpty(),
   check('disciplina', 'La disciplina es obligatoria').isIn(['fútbol', 'baloncesto', 'voleibol', 'tenis']),
+  check('categoria', 'La categoría es obligatoria').isIn(['masculino', 'femenino', 'mixto']),
   check('formato', 'El formato es obligatorio').isIn(['grupos', 'eliminación directa', 'mixto']),
-  check('categoria', 'La categoría es obligatoria').isIn(['masculino', 'femenino', 'mixto']), // ✅ Validar categoría
   check('maxEquipos', 'El número máximo de equipos es obligatorio').isInt({ min: 2 }),
   check('reglas', 'Las reglas son obligatorias').not().isEmpty(),
   body('minJugadores', 'Mínimo de jugadores por equipo es obligatorio').isInt({ min: 1 }),

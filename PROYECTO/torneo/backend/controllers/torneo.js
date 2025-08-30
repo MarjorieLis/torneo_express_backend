@@ -105,16 +105,18 @@ exports.crearTorneo = async (req, res) => {
  */
 exports.listarTorneos = async (req, res) => {
   try {
-    const torneos = await Torneo.find({
-      estado: 'activo',
-      visibilidad: 'pública'
-    })
-      .sort({ createdAt: -1 });
+    const torneos = await Torneo.find({ estado: 'activo' }).lean();
 
-    res.json({ torneos });
+    // Añadir equiposRegistrados basado en la longitud del array de equipos
+    const torneosConConteo = torneos.map(torneo => ({
+      ...torneo,
+      equiposRegistrados: torneo.equipos?.length || 0
+    }));
+
+    res.json({ torneos: torneosConConteo });
   } catch (err) {
     console.error('Error al listar torneos:', err.message);
-    res.status(500).send('Error en el servidor');
+    res.status(500).json({ msg: 'Error en el servidor' });
   }
 };
 
