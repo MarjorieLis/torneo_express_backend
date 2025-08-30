@@ -100,15 +100,15 @@ class PerfilJugadorScreen extends StatelessWidget {
 
               // Lista de torneos
               FutureBuilder(
-                future: ApiService.get('/torneos'),
+                future: _cargarTorneos(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError) {
-                    return Text('Error al cargar torneos');
+                    return Text('Error al cargar torneos: ${snapshot.error}');
                   }
-                  final torneos = snapshot.data?.data as List;
+                  final List torneos = snapshot.data ?? [];
                   if (torneos.isEmpty) {
                     return Text('No hay torneos disponibles');
                   }
@@ -118,6 +118,7 @@ class PerfilJugadorScreen extends StatelessWidget {
                     itemCount: torneos.length,
                     itemBuilder: (context, index) {
                       final torneo = torneos[index];
+                      final estado = torneo['estado'] ?? 'activo';
                       return Card(
                         child: Padding(
                           padding: EdgeInsets.all(12),
@@ -125,21 +126,25 @@ class PerfilJugadorScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                torneo['nombre'],
+                                torneo['nombre'] ?? 'Sin nombre',
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               SizedBox(height: 5),
-                              Text('Disciplina: ${torneo['disciplina']}'),
-                              Text('Equipos: ${torneo['maxEquipos']}'),
+                              Text('Disciplina: ${torneo['disciplina'] ?? 'N/A'}'),
+                              Text('Equipos: ${torneo['maxEquipos'] ?? '?'}'),
                               Text(
                                 'Fechas: ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaInicio']))} - ${DateFormat('dd/MM').format(DateTime.parse(torneo['fechaFin']))}',
                               ),
                               SizedBox(height: 5),
-                              Text(
-                                'Estado: ${torneo['estado']}',
-                                style: TextStyle(
-                                  color: torneo['estado'] == 'activo' ? Colors.green : Colors.orange,
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _getColorPorEstado(estado),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  estado.toUpperCase(),
+                                  style: TextStyle(color: Colors.white, fontSize: 12),
                                 ),
                               ),
                             ],
@@ -174,5 +179,42 @@ class PerfilJugadorScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ✅ Cargar torneos con manejo seguro de tipos
+  Future<List> _cargarTorneos() async {
+    try {
+      final response = await ApiService.get('/torneos');
+      final data = response.data;
+
+      if (data is List) {
+        return data;
+      } else if (data is Map) {
+        if (data.containsKey('data') && data['data'] is List) {
+          return data['data'];
+        } else if (data.containsKey('torneos') && data['torneos'] is List) {
+          return data['torneos'];
+        }
+      }
+      return [];
+    } on Exception catch (e) {
+      throw Exception('Error al cargar torneos: $e');
+    }
+  }
+
+  // ✅ Color por estado
+  Color _getColorPorEstado(String estado) {
+    switch (estado) {
+      case 'activo':
+        return Colors.green;
+      case 'suspendido':
+        return Colors.orange;
+      case 'cancelado':
+        return Colors.red;
+      case 'finalizado':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
   }
 }

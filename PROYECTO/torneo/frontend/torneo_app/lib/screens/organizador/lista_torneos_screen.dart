@@ -25,10 +25,13 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     try {
       final response = await ApiService.get('/torneos');
       setState(() {
+        // ✅ Maneja ambos formatos de respuesta
         if (response.data is List) {
           torneos = response.data;
         } else if (response.data is Map && response.data.containsKey('data')) {
           torneos = response.data['data'];
+        } else if (response.data is Map && response.data.containsKey('torneos')) {
+          torneos = response.data['torneos']; // ✅ Para { torneos: [...] }
         } else {
           torneos = [];
         }
@@ -42,28 +45,46 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     }
   }
 
-  Future<void> _suspenderTorneo(String id) async {
+  Future<void> _suspenderTorneo(String? id) async {
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ ID del torneo no válido')),
+      );
+      return;
+    }
+
     try {
+      print('🆔 Intentando suspender torneo: $id'); // ✅ Depuración
       final response = await ApiService.put('/torneos/$id/suspender', {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo suspendido')),
       );
-      _cargarTorneos();
+      _cargarTorneos(); // Recargar lista
     } on Exception catch (e) {
+      print('❌ Error al suspender: $e'); // ✅ Depuración
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al suspender: $e')),
       );
     }
   }
 
-  Future<void> _cancelarTorneo(String id) async {
+  Future<void> _cancelarTorneo(String? id) async {
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ ID del torneo no válido')),
+      );
+      return;
+    }
+
     try {
+      print('🆔 Intentando cancelar torneo: $id'); // ✅ Depuración
       final response = await ApiService.put('/torneos/$id/cancelar', {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo cancelado')),
       );
-      _cargarTorneos();
+      _cargarTorneos(); // Recargar lista
     } on Exception catch (e) {
+      print('❌ Error al cancelar: $e'); // ✅ Depuración
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al cancelar: $e')),
       );
@@ -101,7 +122,9 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                   itemCount: torneos.length,
                   itemBuilder: (context, index) {
                     final torneo = torneos[index];
-                    final estado = torneo['estado'];
+                    final String? id = torneo['_id'] ?? torneo['id'];
+                    final String estado = torneo['estado'] ?? 'activo';
+
                     return Card(
                       margin: EdgeInsets.symmetric(vertical: 8),
                       child: Padding(
@@ -109,22 +132,34 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Nombre del torneo
                             Text(
-                              torneo['nombre'],
+                              torneo['nombre'] ?? 'Sin nombre',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             SizedBox(height: 5),
-                            Text('${torneo['disciplina'].toUpperCase()}'),
+
+                            // Disciplina
+                            Text(
+                              (torneo['disciplina'] ?? '').toUpperCase(),
+                              style: TextStyle(color: Constants.primaryColor),
+                            ),
+
+                            // Fechas
                             Text(
                               '${_formatoFecha.format(DateTime.parse(torneo['fechaInicio']))} - ${_formatoFecha.format(DateTime.parse(torneo['fechaFin']))}',
                               style: TextStyle(color: Colors.grey),
                             ),
+
                             SizedBox(height: 10),
+
+                            // Estado y botones
                             Row(
                               children: [
+                                // Estado
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
@@ -137,11 +172,13 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                   ),
                                 ),
                                 Spacer(),
+
+                                // Botones solo si está activo
                                 if (estado == 'activo')
                                   Row(
                                     children: [
                                       ElevatedButton(
-                                        onPressed: () => _suspenderTorneo(torneo['_id']),
+                                        onPressed: () => _suspenderTorneo(id),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.orange,
                                           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -151,7 +188,7 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                       ),
                                       SizedBox(width: 8),
                                       ElevatedButton(
-                                        onPressed: () => _cancelarTorneo(torneo['_id']),
+                                        onPressed: () => _cancelarTorneo(id),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.red,
                                           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -161,6 +198,7 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                       ),
                                     ],
                                   ),
+
                                 // Botón "Ver detalles"
                                 SizedBox(width: 8),
                                 ElevatedButton.icon(
