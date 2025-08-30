@@ -25,13 +25,12 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     try {
       final response = await ApiService.get('/torneos');
       setState(() {
-        // ✅ Maneja ambos formatos de respuesta
         if (response.data is List) {
           torneos = response.data;
         } else if (response.data is Map && response.data.containsKey('data')) {
           torneos = response.data['data'];
         } else if (response.data is Map && response.data.containsKey('torneos')) {
-          torneos = response.data['torneos']; // ✅ Para { torneos: [...] }
+          torneos = response.data['torneos'];
         } else {
           torneos = [];
         }
@@ -54,14 +53,14 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     }
 
     try {
-      print('🆔 Intentando suspender torneo: $id'); // ✅ Depuración
+      print('🆔 Intentando suspender torneo: $id');
       final response = await ApiService.put('/torneos/$id/suspender', {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo suspendido')),
       );
-      _cargarTorneos(); // Recargar lista
+      _cargarTorneos();
     } on Exception catch (e) {
-      print('❌ Error al suspender: $e'); // ✅ Depuración
+      print('❌ Error al suspender: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al suspender: $e')),
       );
@@ -77,16 +76,39 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
     }
 
     try {
-      print('🆔 Intentando cancelar torneo: $id'); // ✅ Depuración
+      print('🆔 Intentando cancelar torneo: $id');
       final response = await ApiService.put('/torneos/$id/cancelar', {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ Torneo cancelado')),
       );
-      _cargarTorneos(); // Recargar lista
+      _cargarTorneos();
     } on Exception catch (e) {
-      print('❌ Error al cancelar: $e'); // ✅ Depuración
+      print('❌ Error al cancelar: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error al cancelar: $e')),
+      );
+    }
+  }
+
+  Future<void> _reanudarTorneo(String? id) async {
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ ID del torneo no válido')),
+      );
+      return;
+    }
+
+    try {
+      print('🆔 Intentando reanudar torneo: $id');
+      final response = await ApiService.put('/torneos/$id/reanudar', {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Torneo reanudado')),
+      );
+      _cargarTorneos();
+    } on Exception catch (e) {
+      print('❌ Error al reanudar: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error al reanudar: $e')),
       );
     }
   }
@@ -132,7 +154,6 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Nombre del torneo
                             Text(
                               torneo['nombre'] ?? 'Sin nombre',
                               style: TextStyle(
@@ -141,25 +162,17 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                               ),
                             ),
                             SizedBox(height: 5),
-
-                            // Disciplina
                             Text(
                               (torneo['disciplina'] ?? '').toUpperCase(),
                               style: TextStyle(color: Constants.primaryColor),
                             ),
-
-                            // Fechas
                             Text(
                               '${_formatoFecha.format(DateTime.parse(torneo['fechaInicio']))} - ${_formatoFecha.format(DateTime.parse(torneo['fechaFin']))}',
                               style: TextStyle(color: Colors.grey),
                             ),
-
                             SizedBox(height: 10),
-
-                            // Estado y botones
                             Row(
                               children: [
-                                // Estado
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
@@ -172,8 +185,6 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                   ),
                                 ),
                                 Spacer(),
-
-                                // Botones solo si está activo
                                 if (estado == 'activo')
                                   Row(
                                     children: [
@@ -198,8 +209,17 @@ class _ListaTorneosScreenState extends State<ListaTorneosScreen> {
                                       ),
                                     ],
                                   ),
-
-                                // Botón "Ver detalles"
+                                if (estado == 'suspendido')
+                                  ElevatedButton.icon(
+                                    onPressed: () => _reanudarTorneo(id),
+                                    icon: Icon(Icons.play_arrow, size: 14),
+                                    label: Text('Reanudar', style: TextStyle(fontSize: 12)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                  ),
                                 SizedBox(width: 8),
                                 ElevatedButton.icon(
                                   onPressed: () {
