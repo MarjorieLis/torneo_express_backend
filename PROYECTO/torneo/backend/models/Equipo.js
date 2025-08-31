@@ -1,40 +1,40 @@
 // backend/models/Equipo.js
 const mongoose = require('mongoose');
 
+const jugadorSchema = new mongoose.Schema({
+  nombre: { type: String, required: true },
+  cedula: { type: String, required: true }
+});
+
 const equipoSchema = new mongoose.Schema({
   nombre: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    unique: true
   },
   disciplina: {
     type: String,
     required: true,
     enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis']
   },
-  capitán: {
+  torneo: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'Torneo'
   },
-  jugadores: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  ],
+  capitán: {
+    nombre: { type: String, required: true },
+    cedula: { type: String, required: true }
+  },
   cedulaCapitan: {
     type: String,
     required: true
   },
+  jugadores: [jugadorSchema],
   estado: {
     type: String,
     default: 'pendiente',
     enum: ['pendiente', 'aprobado', 'rechazado']
-  },
-  torneo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Torneo'
   },
   createdAt: {
     type: Date,
