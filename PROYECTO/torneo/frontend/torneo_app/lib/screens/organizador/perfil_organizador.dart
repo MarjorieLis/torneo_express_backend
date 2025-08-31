@@ -114,6 +114,19 @@ class PerfilOrganizadorScreen extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
+
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/gestionar_equipos');
+                },
+                icon: Icon(Icons.group),
+                label: Text('Gestionar Equipos'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Constants.primaryColor,
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+
+),
+),
           ],
         ),
       ),

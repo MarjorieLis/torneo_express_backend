@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
-import 'package:torneo_app/utils/helpers.dart'; // ✅ Solo esta importación
+import 'package:torneo_app/utils/helpers.dart';
 
 class SeleccionarTorneoScreen extends StatefulWidget {
   @override
@@ -17,8 +17,7 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Prueba inmediata
-    print('🔧 Prueba: ${capitalize("voleibol")}'); // Debe imprimir "Voleibol"
+    print('🔧 Prueba: ${capitalize("voleibol")}');
     _cargarTorneos();
   }
 
@@ -83,7 +82,6 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 5),
-                            // ✅ Usa la función global
                             Text('Disciplina: ${capitalize(torneo['disciplina'])}'),
                             Text('Equipos: $equiposRegistrados / $maxEquipos'),
                             if (equiposRestantes > 0)
@@ -94,7 +92,6 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                               'Fechas: ${inicio != null ? DateFormat('dd/MM').format(inicio) : 'Inválida'} - ${fin != null ? DateFormat('dd/MM').format(fin) : 'Inválida'}',
                             ),
                             SizedBox(height: 10),
-                            // ✅ Usa la función global
                             if (categoria != null)
                               Text(
                                 'Categoría: ${capitalize(categoria)}',
@@ -119,8 +116,23 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
                             ),
                             SizedBox(height: 15),
                             ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/inscribir_equipo', arguments: torneo);
+                              onPressed: () async {
+                                final result = await Navigator.pushNamed(context, '/inscribir_equipo', arguments: torneo);
+                                if (result != null && result is Map<String, dynamic>) {
+                                  if (result.containsKey('torneos')) {
+                                    setState(() {
+                                      torneos = List<Map<String, dynamic>>.from(result['torneos']);
+                                    });
+                                  } else {
+                                    final updatedTorneo = result;
+                                    final index = torneos.indexWhere((t) => t['_id'] == updatedTorneo['_id']);
+                                    if (index != -1) {
+                                      setState(() {
+                                        torneos[index] = updatedTorneo;
+                                      });
+                                    }
+                                  }
+                                }
                               },
                               icon: Icon(Icons.add_circle),
                               label: Text('Inscribir Equipo'),

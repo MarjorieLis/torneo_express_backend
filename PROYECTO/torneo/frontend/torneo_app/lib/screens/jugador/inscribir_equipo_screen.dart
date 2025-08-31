@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
-import 'package:torneo_app/utils/helpers.dart'; // ✅ Usa helpers.dart
+import 'package:torneo_app/utils/helpers.dart';
 
 class InscribirEquipoScreen extends StatefulWidget {
   final Map<String, dynamic> torneo;
@@ -33,7 +33,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   void initState() {
     super.initState();
     _disciplina = widget.torneo['disciplina'];
-    _minJugadores = widget.torneo['minJugadores'] ?? 5; // Valores por defecto
+    _minJugadores = widget.torneo['minJugadores'] ?? 5;
     _maxJugadores = widget.torneo['maxJugadores'] ?? 12;
     _cargarJugadoresExistentes();
   }
@@ -95,7 +95,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final totalJugadores = _jugadores.length + 1; // +1 por el capitán
+    final totalJugadores = _jugadores.length + 1;
+    final capitanCedula = _cedulaCapitanController.text.trim();
 
     if (totalJugadores < _minJugadores) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +112,6 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
       return;
     }
 
-    final capitanCedula = _cedulaCapitanController.text.trim();
     if (_cedulasUsadas.contains(capitanCedula) && !_jugadores.any((j) => j['cedula'] == capitanCedula)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('El capitán con cédula $capitanCedula ya está inscrito en otro equipo')),
@@ -121,17 +121,16 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
 
     setState(() => _isLoading = true);
 
-    // ✅ Enviar datos en formato correcto
     final data = {
       'nombre': _nombreController.text.trim(),
       'disciplina': _disciplina,
       'torneoId': widget.torneo['_id'],
       'capitán': {
         'nombre': _capitanController.text.trim(),
-        'cedula': capitanCedula // ✅ clave correcta: 'cedula'
+        'cedula': capitanCedula
       },
-      'cedulaCapitan': capitanCedula, // ✅ campo obligatorio
-      'jugadores': _jugadores, // ✅ array de objetos, no strings
+      'cedulaCapitan': capitanCedula,
+      'jugadores': _jugadores,
       'estado': 'pendiente'
     };
 
@@ -141,7 +140,14 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Equipo inscrito con éxito')),
         );
-        Navigator.pop(context);
+
+        // ✅ Refrescar TODA la lista de torneos
+        final torneosActualizados = await ApiService.get('/torneos');
+        if (torneosActualizados.statusCode == 200) {
+          Navigator.pop(context, torneosActualizados.data);
+        } else {
+          Navigator.pop(context);
+        }
       } else {
         final errorMsg = response.data['msg'] ?? 'Error al inscribir equipo';
         ScaffoldMessenger.of(context).showSnackBar(
