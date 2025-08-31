@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static final Dio _dio = Dio();
 
-  static const String baseUrl = 'http://192.168.0.8:5000/api';
+  static const String baseUrl = 'http://192.168.0.5:5000/api';
 
   static void init() {
     _dio.options

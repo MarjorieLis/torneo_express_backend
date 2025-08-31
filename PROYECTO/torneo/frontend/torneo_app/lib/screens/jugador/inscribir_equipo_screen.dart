@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
-import 'package:torneo_app/utils/disciplina_rules.dart';
+import 'package:torneo_app/utils/helpers.dart'; // ✅ Usa helpers.dart
 
 class InscribirEquipoScreen extends StatefulWidget {
   final Map<String, dynamic> torneo;
@@ -33,9 +33,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   void initState() {
     super.initState();
     _disciplina = widget.torneo['disciplina'];
-    // Usar reglas del torneo si están definidas, si no, usar reglas por defecto
-    _minJugadores = widget.torneo['minJugadores'] ?? DisciplinaRules.minJugadores(_disciplina!);
-    _maxJugadores = widget.torneo['maxJugadores'] ?? DisciplinaRules.maxJugadores(_disciplina!);
+    _minJugadores = widget.torneo['minJugadores'] ?? 5; // Valores por defecto
+    _maxJugadores = widget.torneo['maxJugadores'] ?? 12;
     _cargarJugadoresExistentes();
   }
 
@@ -94,65 +93,67 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   }
 
   void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      final totalJugadores = _jugadores.length + 1; // +1 por el capitán
+    if (!_formKey.currentState!.validate()) return;
 
-      if (totalJugadores < _minJugadores) {
+    final totalJugadores = _jugadores.length + 1; // +1 por el capitán
+
+    if (totalJugadores < _minJugadores) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Se requieren al menos $_minJugadores jugadores para $_disciplina')),
+      );
+      return;
+    }
+
+    if (totalJugadores > _maxJugadores) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Máximo permitido: $_maxJugadores jugadores para $_disciplina')),
+      );
+      return;
+    }
+
+    final capitanCedula = _cedulaCapitanController.text.trim();
+    if (_cedulasUsadas.contains(capitanCedula) && !_jugadores.any((j) => j['cedula'] == capitanCedula)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('El capitán con cédula $capitanCedula ya está inscrito en otro equipo')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    // ✅ Enviar datos en formato correcto
+    final data = {
+      'nombre': _nombreController.text.trim(),
+      'disciplina': _disciplina,
+      'torneoId': widget.torneo['_id'],
+      'capitán': {
+        'nombre': _capitanController.text.trim(),
+        'cedula': capitanCedula // ✅ clave correcta: 'cedula'
+      },
+      'cedulaCapitan': capitanCedula, // ✅ campo obligatorio
+      'jugadores': _jugadores, // ✅ array de objetos, no strings
+      'estado': 'pendiente'
+    };
+
+    try {
+      final response = await ApiService.post('/equipos', data);
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Se requieren al menos $_minJugadores jugadores para $_disciplina (incluido el capitán)')),
+          const SnackBar(content: Text('✅ Equipo inscrito con éxito')),
         );
-        return;
-      }
-
-      if (totalJugadores > _maxJugadores) {
+        Navigator.pop(context);
+      } else {
+        final errorMsg = response.data['msg'] ?? 'Error al inscribir equipo';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Máximo permitido: $_maxJugadores jugadores para $_disciplina')),
+          SnackBar(content: Text('❌ $errorMsg')),
         );
-        return;
       }
-
-      final capitanCedula = _cedulaCapitanController.text.trim();
-      if (_cedulasUsadas.contains(capitanCedula) && !_jugadores.any((j) => j['cedula'] == capitanCedula)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('El capitán con cédula $capitanCedula ya está inscrito en otro equipo')),
-        );
-        return;
-      }
-
-      setState(() => _isLoading = true);
-
-      final data = {
-        'nombre': _nombreController.text.trim(),
-        'disciplina': _disciplina,
-        'torneoId': widget.torneo['_id'],
-        'capitan': {
-          'nombre': _capitanController.text.trim(),
-          'cedulaCapitan': capitanCedula, // ✅ Correcto: cedulaCapitan
-        },
-        'jugadores': _jugadores.map((j) => '${j['nombre']} (${j['cedula']})').toList(),
-        'estado': 'pendiente'
-      };
-
-      try {
-        final response = await ApiService.post('/equipos', data);
-        if (response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Equipo inscrito con éxito')),
-          );
-          Navigator.pop(context);
-        } else {
-          final errorMsg = response.data['msg'] ?? 'Error al inscribir equipo';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('❌ $errorMsg')), // ✅ Corregido: $errorMsg, no $errors
-          );
-        }
-      } on Exception catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Error de conexión: $e')),
-        );
-      } finally {
-        setState(() => _isLoading = false);
-      }
+    } on Exception catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error de conexión: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -221,7 +222,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
                 child: Padding(
                   padding: EdgeInsets.all(12),
                   child: Text(
-                    '${widget.torneo['categoria'] != null ? widget.torneo['categoria'].toString().capitalize() : 'N/A'} • $_disciplina: $_minJugadores - $_maxJugadores jugadores', 
+                    '${capitalize(widget.torneo['categoria'])} • $_disciplina: $_minJugadores - $_maxJugadores jugadores',
                     style: TextStyle(color: Colors.blue[900]),
                   ),
                 ),
@@ -339,12 +340,5 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
         ),
       ),
     );
-  }
-}
-
-// ✅ Extensión añadida aquí para que funcione capitalize()
-extension StringExtension on String {
-  String capitalize() {
-    return isEmpty ? this : "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
 }
