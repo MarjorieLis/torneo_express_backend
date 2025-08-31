@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torneo_app/services/api_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:torneo_app/utils/helpers.dart';
+import 'package:torneo_app/screens/organizador/detalle_equipo_screen.dart';
 
 class GestionarEquiposScreen extends StatefulWidget {
   @override
@@ -64,7 +65,7 @@ class _GestionarEquiposScreenState extends State<GestionarEquiposScreen> {
       } else {
         final errorMsg = response.data['msg'] ?? 'Error al aprobar equipo';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ $errorMsg')), // ✅ Corregido: $errorMsg
+          SnackBar(content: Text('❌ $errorMsg')),
         );
       }
     } on Exception catch (e) {
@@ -85,7 +86,7 @@ class _GestionarEquiposScreenState extends State<GestionarEquiposScreen> {
       } else {
         final errorMsg = response.data['msg'] ?? 'Error al rechazar equipo';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ $errorMsg')), // ✅ Corregido: $errorMsg
+          SnackBar(content: Text('❌ $errorMsg')),
         );
       }
     } on Exception catch (e) {
@@ -111,9 +112,9 @@ class _GestionarEquiposScreenState extends State<GestionarEquiposScreen> {
                   itemCount: equipos.length,
                   itemBuilder: (context, index) {
                     final equipo = equipos[index];
-                    final capitan = equipo['capitán']; // ✅ Sin tilde
+                    final capitan = equipo['capitán'];
                     final cedulaCapitan = equipo['cedulaCapitan'];
-                    final nombreCapitan = capitan?['nombre'] ?? 'Sin nombre'; // ✅ Sin tilde
+                    final nombreCapitan = capitan?['nombre'] ?? 'Sin nombre';
 
                     return Card(
                       child: Padding(
@@ -128,7 +129,7 @@ class _GestionarEquiposScreenState extends State<GestionarEquiposScreen> {
                             SizedBox(height: 5),
                             Text('Disciplina: ${capitalize(equipo['disciplina'])}'),
                             Text('Cédula del capitán: $cedulaCapitan'),
-                            Text('Nombre del capitán: $nombreCapitan'), // ✅ Mostrado
+                            Text('Nombre del capitán: $nombreCapitan'),
                             SizedBox(height: 10),
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -142,25 +143,51 @@ class _GestionarEquiposScreenState extends State<GestionarEquiposScreen> {
                               ),
                             ),
                             SizedBox(height: 15),
+                            // ✅ Botón "Ver Detalles"
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DetalleEquipoScreen(equipo: equipo),
+                                  ),
+                                );
+                              },
+                              icon: Icon(Icons.info_outline),
+                              label: Text('Ver Detalles'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 15),
+                            // Botones de aprobar/rechazar
                             Row(
                               children: [
-                                ElevatedButton.icon(
-                                  onPressed: () => _aprobarEquipo(equipo['_id']),
-                                  icon: Icon(Icons.check_circle),
-                                  label: Text('Aprobar'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _aprobarEquipo(equipo['_id']),
+                                    icon: Icon(Icons.check_circle),
+                                    label: Text('Aprobar'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: EdgeInsets.symmetric(vertical: 6),
+                                    ),
                                   ),
                                 ),
                                 SizedBox(width: 10),
-                                ElevatedButton.icon(
-                                  onPressed: () => _rechazarEquipo(equipo['_id']),
-                                  icon: Icon(Icons.close),
-                                  label: Text('Rechazar'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _rechazarEquipo(equipo['_id']),
+                                    icon: Icon(Icons.close),
+                                    label: Text('Rechazar'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      padding: EdgeInsets.symmetric(vertical: 6),
+                                    ),
                                   ),
                                 ),
                               ],

@@ -17,6 +17,14 @@ class PerfilJugadorScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Mi Perfil - Jugador'),
         backgroundColor: Constants.primaryColor,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
       ),
       body: Container(
         padding: EdgeInsets.all(20),
@@ -112,7 +120,7 @@ class PerfilJugadorScreen extends StatelessWidget {
               ),
               SizedBox(height: 10),
 
-              // Lista de torneos
+              // Lista de torneos disponibles
               FutureBuilder(
                 future: _cargarTorneos(),
                 builder: (context, snapshot) {
@@ -203,10 +211,56 @@ class PerfilJugadorScreen extends StatelessWidget {
           ),
         ),
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(user['name'] ?? 'Jugador'),
+              accountEmail: Text(user['email'] ?? ''),
+              currentAccountPicture: CircleAvatar(
+                child: Icon(Icons.person),
+              ),
+              decoration: BoxDecoration(color: Constants.primaryColor),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Mi Perfil'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.sports),
+              title: Text('Mis Torneos'),
+              onTap: () {
+                Navigator.pop(context);
+                // ✅ Pasa el usuario completo (con cedula)
+                Navigator.pushNamed(context, '/mis_torneos', arguments: user);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.event),
+              title: Text('Calendario'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Ir a calendario personalizado
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Cerrar sesión'),
+              onTap: () {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  // ✅ Cargar torneos con manejo seguro de tipos
   Future<List> _cargarTorneos() async {
     try {
       final response = await ApiService.get('/torneos');
@@ -227,7 +281,6 @@ class PerfilJugadorScreen extends StatelessWidget {
     }
   }
 
-  // ✅ Color por estado
   Color _getColorPorEstado(String estado) {
     switch (estado) {
       case 'activo':
