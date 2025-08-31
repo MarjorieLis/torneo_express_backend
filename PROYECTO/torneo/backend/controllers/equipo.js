@@ -17,7 +17,7 @@ exports.crearEquipo = async (req, res) => {
   const { nombre, disciplina, capitán, cedulaCapitan, jugadores, torneoId } = req.body;
 
   try {
-    // ✅ Validaciones básicas
+    // Validaciones básicas
     if (!nombre || !disciplina || !capitán || !cedulaCapitan) {
       return res.status(400).json({
         msg: 'Todos los campos marcados son obligatorios'
@@ -36,7 +36,7 @@ exports.crearEquipo = async (req, res) => {
       });
     }
 
-    // ✅ Validar reglas por disciplina
+    // Validar reglas por disciplina
     const reglas = reglasDisciplina[disciplina];
     if (!reglas) {
       return res.status(400).json({ msg: 'Disciplina no válida' });
@@ -54,7 +54,7 @@ exports.crearEquipo = async (req, res) => {
       });
     }
 
-    // ✅ Validar que el capitán esté en la lista de jugadores
+    // Validar que el capitán esté en la lista de jugadores
     const capitánEnLista = jugadores?.some(j => j.cedula === capitán.cedula);
     if (!capitánEnLista) {
       return res.status(400).json({
@@ -62,7 +62,7 @@ exports.crearEquipo = async (req, res) => {
       });
     }
 
-    // ✅ Verificar si ya existe un equipo con ese nombre
+    // Verificar si ya existe un equipo con ese nombre
     const equipoExistente = await Equipo.findOne({ nombre });
     if (equipoExistente) {
       return res.status(400).json({
@@ -70,39 +70,7 @@ exports.crearEquipo = async (req, res) => {
       });
     }
 
-    // ✅ Verificar si el capitán ya está inscrito en otro equipo
-    const capitánInscrito = await Equipo.findOne({
-      'capitán.cedula': capitán.cedula,
-      estado: 'pendiente'
-    });
-    if (capitánInscrito) {
-      return res.status(400).json({
-        msg: `El jugador con cédula ${capitán.cedula} ya está inscrito como capitán en otro equipo`
-      });
-    }
-
-    // ✅ Verificar si algún jugador ya está inscrito
-    if (Array.isArray(jugadores)) {
-      for (const jugador of jugadores) {
-        if (!jugador.nombre || !jugador.cedula) {
-          return res.status(400).json({
-            msg: 'Cada jugador debe tener nombre y cédula'
-          });
-        }
-
-        const jugadorInscrito = await Equipo.findOne({
-          'jugadores.cedula': jugador.cedula,
-          estado: 'pendiente'
-        });
-        if (jugadorInscrito) {
-          return res.status(400).json({
-            msg: `El jugador ${jugador.nombre} (cedula: ${jugador.cedula}) ya está inscrito en otro equipo`
-          });
-        }
-      }
-    }
-
-    // ✅ Crear nuevo equipo
+    // Crear nuevo equipo
     const nuevoEquipo = new Equipo({
       nombre,
       disciplina,
@@ -115,6 +83,13 @@ exports.crearEquipo = async (req, res) => {
 
     await nuevoEquipo.save();
 
+    // ✅ Incrementar equiposRegistrados en el torneo
+    if (torneoId) {
+      await Torneo.findByIdAndUpdate(torneoId, {
+        $inc: { equiposRegistrados: 1 }
+      });
+    }
+
     res.status(201).json({
       msg: 'Equipo registrado, pendiente de aprobación',
       equipo: nuevoEquipo
@@ -126,7 +101,7 @@ exports.crearEquipo = async (req, res) => {
 };
 
 /**
- * GET /api/equipos - Listar equipos para organizador
+ * GET /api/equipos - Listar todos los equipos
  */
 exports.listarEquipos = async (req, res) => {
   try {

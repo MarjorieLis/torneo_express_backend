@@ -9,7 +9,8 @@ const {
   listarTorneos,
   suspenderTorneo,
   cancelarTorneo,
-  reanudarTorneo
+  reanudarTorneo,
+  obtenerTorneoPorId 
 } = require('../controllers/torneo');
 
 /**
@@ -30,6 +31,12 @@ router.post('/', auth, [
  * GET /api/torneos - Listar todos los torneos
  */
 router.get('/', auth, listarTorneos);
+
+
+/**
+ * GET /api/torneos/:id - Obtener torneo por ID
+ */
+router.get('/:id', auth, obtenerTorneoPorId); 
 
 /**
  * PUT /api/torneos/:id/suspender - RF-007: Suspender torneo

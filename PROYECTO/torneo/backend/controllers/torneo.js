@@ -121,6 +121,22 @@ exports.listarTorneos = async (req, res) => {
 };
 
 /**
+ * GET /api/torneos/:id - Obtener torneo por ID
+ */
+exports.obtenerTorneoPorId = async (req, res) => {
+  try {
+    const torneo = await Torneo.findById(req.params.id);
+    if (!torneo) {
+      return res.status(404).json({ msg: 'Torneo no encontrado' });
+    }
+    res.json({ torneo });
+  } catch (err) {
+    console.error('❌ Error en GET /api/torneos/:id:', err.message);
+    res.status(500).send('Error en el servidor');
+  }
+};
+
+/**
  * PUT /api/torneos/:id/suspender - RF-007: Suspender torneo
  */
 exports.suspenderTorneo = async (req, res) => {

@@ -80,6 +80,10 @@ const torneoSchema = new mongoose.Schema({
     type: String,
     default: 'pública'
   },
+  equiposRegistrados: { 
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
