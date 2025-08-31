@@ -2,7 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const { check, body } = require('express-validator');
 
 const { 
   crearTorneo, 
@@ -17,21 +16,20 @@ const {
  * POST /api/torneos - RF-001: Crear torneo
  */
 router.post('/', auth, [
-  check('nombre', 'El nombre es obligatorio').not().isEmpty(),
-  check('disciplina', 'La disciplina es obligatoria').isIn(['fútbol', 'baloncesto', 'voleibol', 'tenis']),
-  check('categoria', 'La categoría es obligatoria').isIn(['masculino', 'femenino', 'mixto']),
-  check('formato', 'El formato es obligatorio').isIn(['grupos', 'eliminación directa', 'mixto']),
-  check('maxEquipos', 'El número máximo de equipos es obligatorio').isInt({ min: 2 }),
-  check('reglas', 'Las reglas son obligatorias').not().isEmpty(),
-  body('minJugadores', 'Mínimo de jugadores por equipo es obligatorio').isInt({ min: 1 }),
-  body('maxJugadores', 'Máximo de jugadores por equipo es obligatorio').isInt({ min: 2 })
+  require('express-validator').check('nombre', 'El nombre es obligatorio').not().isEmpty(),
+  require('express-validator').check('disciplina', 'La disciplina es obligatoria').isIn(['fútbol', 'baloncesto', 'voleibol', 'tenis']),
+  require('express-validator').check('categoria', 'La categoría es obligatoria').isIn(['masculino', 'femenino', 'mixto']),
+  require('express-validator').check('formato', 'El formato es obligatorio').isIn(['grupos', 'eliminación directa', 'mixto']),
+  require('express-validator').check('maxEquipos', 'El número máximo de equipos es obligatorio').isInt({ min: 2 }),
+  require('express-validator').check('reglas', 'Las reglas son obligatorias').not().isEmpty(),
+  require('express-validator').body('minJugadores', 'Mínimo de jugadores por equipo es obligatorio').isInt({ min: 1 }),
+  require('express-validator').body('maxJugadores', 'Máximo de jugadores por equipo es obligatorio').isInt({ min: 2 })
 ], crearTorneo);
 
 /**
  * GET /api/torneos - Listar todos los torneos
  */
 router.get('/', auth, listarTorneos);
-
 
 /**
  * GET /api/torneos/:id - Obtener torneo por ID

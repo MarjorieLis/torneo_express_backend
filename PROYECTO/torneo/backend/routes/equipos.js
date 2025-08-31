@@ -1,8 +1,6 @@
 // backend/routes/equipos.js
 const express = require('express');
 const router = express.Router();
-
-// ✅ Importa los modelos
 const Equipo = require('../models/Equipo');
 const Torneo = require('../models/Torneo');
 
@@ -13,13 +11,58 @@ router.post('/', async (req, res) => {
   const { nombre, disciplina, capitán, cedulaCapitan, jugadores, torneoId } = req.body;
 
   try {
+    // ✅ Validar nombre único
+    const existeEquipo = await Equipo.findOne({ nombre });
+    if (existeEquipo) {
+      return res.status(400).json({ msg: 'Ya existe un equipo con ese nombre' });
+    }
+
+    // ✅ Crear lista de jugadores que incluya al capitán
+    let jugadoresConCapitan = [...(jugadores || [])];
+
+    const yaEstaEnLista = jugadoresConCapitan.some(j => j.cedula === cedulaCapitan);
+    if (!yaEstaEnLista) {
+      jugadoresConCapitan.push({
+        nombre: capitán.nombre,
+        cedula: cedulaCapitan
+      });
+    }
+
+    // ✅ Obtener todas las cédulas
+    const cedulasNuevas = [
+      cedulaCapitan,
+      ...jugadoresConCapitan.map(j => j.cedula)
+    ].filter(Boolean);
+
+    // ✅ Buscar si alguna cédula ya está en otro equipo
+    const equiposExistentes = await Equipo.find({
+      torneoId,
+      $or: [
+        { 'capitán.cedula': { $in: cedulasNuevas } },
+        { 'jugadores.cedula': { $in: cedulasNuevas } }
+      ],
+      estado: { $in: ['pendiente', 'aprobado'] }
+    });
+
+    if (equiposExistentes.length > 0) {
+      const nombresDuplicados = [...new Set(
+        jugadoresConCapitan
+          .filter(j => cedulasNuevas.includes(j.cedula))
+          .map(j => j.nombre)
+      )];
+      return res.status(400).json({
+        msg: `Los siguientes jugadores ya están inscritos: ${nombresDuplicados.join(', ')}`
+      });
+    }
+
+    // ✅ Crear nuevo equipo
     const nuevoEquipo = new Equipo({
       nombre,
       disciplina,
       torneoId,
       capitán,
       cedulaCapitan,
-      jugadores: jugadores || [],
+      jugadores: jugadoresConCapitan,
       estado: 'pendiente'
     });
 
@@ -29,7 +72,7 @@ router.post('/', async (req, res) => {
     if (torneoId) {
       await Torneo.findByIdAndUpdate(torneoId, {
         $inc: { equiposRegistrados: 1 }
-      });
+      }, { new: true });
     }
 
     res.status(201).json({
@@ -37,20 +80,7 @@ router.post('/', async (req, res) => {
       equipo: nuevoEquipo
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Error en el servidor');
-  }
-});
-
-/**
- * GET /api/equipos - Listar todos los equipos
- */
-router.get('/', async (req, res) => {
-  try {
-    const equipos = await Equipo.find().populate('torneo', 'nombre');
-    res.json({ equipos });
-  } catch (err) {
-    console.error(err.message);
+    console.error('❌ Error al crear equipo:', err.message);
     res.status(500).send('Error en el servidor');
   }
 });
@@ -71,6 +101,13 @@ router.put('/:id/aprobar', async (req, res) => {
 
     equipo.estado = 'aprobado';
     await equipo.save();
+
+    // ✅ Incrementar equiposRegistrados
+    if (equipo.torneoId) {
+      await Torneo.findByIdAndUpdate(equipo.torneoId, {
+        $inc: { equiposRegistrados: 1 }
+      }, { new: true });
+    }
 
     res.json({ msg: 'Equipo aprobado', equipo });
   } catch (err) {
@@ -104,15 +141,25 @@ router.put('/:id/rechazar', async (req, res) => {
 });
 
 /**
+ * GET /api/equipos - Listar todos los equipos
+ */
+router.get('/', async (req, res) => {
+  try {
+    const equipos = await Equipo.find().populate('torneo', 'nombre');
+    res.json({ equipos });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Error en el servidor');
+  }
+});
+
+/**
  * GET /api/equipos/jugador/:cedula/torneos
- * Obtener torneos en los que está inscrito un jugador (por cédula)
  */
 router.get('/jugador/:cedula/torneos', async (req, res) => {
   try {
     const { cedula } = req.params;
-    console.log('🔍 Buscando torneos para jugador con cédula:', cedula);
 
-    // Busca equipos donde el jugador sea capitán o esté en la lista
     const equipos = await Equipo.find({
       $or: [
         { 'capitán.cedula': cedula },
@@ -122,12 +169,9 @@ router.get('/jugador/:cedula/torneos', async (req, res) => {
     }).populate('torneo', 'nombre disciplina categoria estado fechaInicio fechaFin maxEquipos equiposRegistrados');
 
     if (!equipos || equipos.length === 0) {
-      return res.status(404).json({
-        msg: 'No estás inscrito en ningún torneo'
-      });
+      return res.status(404).json({ msg: 'No estás inscrito en ningún torneo' });
     }
 
-    // Extrae torneos únicos
     const torneosMap = new Map();
     equipos.forEach(eq => {
       if (eq.torneo) {
@@ -138,12 +182,9 @@ router.get('/jugador/:cedula/torneos', async (req, res) => {
       }
     });
 
-    const torneos = Array.from(torneosMap.values());
-    console.log('✅ Torneos encontrados:', torneos.length);
-    res.json({ torneos });
+    res.json({ torneos: Array.from(torneosMap.values()) });
   } catch (err) {
-    console.error('❌ Error en GET /equipos/jugador/:cedula/torneos:', err.message);
-    res.status(500).send('Error interno del servidor. Inténtalo más tarde.');
+    res.status(500).send('Error interno del servidor');
   }
 });
 
