@@ -24,8 +24,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
   List<Map<String, String>> _jugadores = [];
   Set<String> _cedulasUsadas = {};
   String? _disciplina;
-  int _minJugadores = 1;
-  int _maxJugadores = 15;
+  int _minJugadores = 5;
+  int _maxJugadores = 12;
 
   bool _isLoading = false;
 
@@ -46,8 +46,8 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
           _cedulasUsadas = response.data.map((c) => c.toString()).toSet();
         });
       }
-    } catch (e) {
-      print('Error al cargar jugadores existentes: $e');
+    } on Exception catch (e) {
+      print('⚠️ Error al cargar jugadores existentes: $e');
     }
   }
 
@@ -112,13 +112,6 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
       return;
     }
 
-    if (_cedulasUsadas.contains(capitanCedula) && !_jugadores.any((j) => j['cedula'] == capitanCedula)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('El capitán con cédula $capitanCedula ya está inscrito en otro equipo')),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     final data = {
@@ -141,7 +134,7 @@ class _InscribirEquipoScreenState extends State<InscribirEquipoScreen> {
           const SnackBar(content: Text('✅ Equipo inscrito con éxito')),
         );
 
-        // ✅ Refrescar TODA la lista de torneos
+        // ✅ Recargar todos los torneos
         final torneosActualizados = await ApiService.get('/torneos');
         if (torneosActualizados.statusCode == 200) {
           Navigator.pop(context, torneosActualizados.data);

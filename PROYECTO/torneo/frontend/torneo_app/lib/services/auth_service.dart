@@ -24,20 +24,15 @@ class AuthService with ChangeNotifier {
     final token = prefs.getString('auth_token');
     final userData = prefs.getString('user_data');
 
-    print('🔐 Token en SharedPreferences: $token');
-    print('👥 User data en SharedPreferences: $userData');
-
     if (token != null && userData != null) {
       _token = token;
       try {
         _user = Map<String, dynamic>.from((jsonDecode(userData) as Map).cast<String, dynamic>());
         _isAuthenticated = true;
-        print('✅ Usuario autenticado automáticamente');
       } on FormatException catch (e) {
-        print('❌ Error al decodificar JSON: $e');
-        await logout(); // Limpia datos corruptos
+        await logout();
       } catch (e) {
-        print('❌ Error inesperado al cargar sesión: $e');
+        await logout();
       }
     }
     notifyListeners();
@@ -53,9 +48,6 @@ class AuthService with ChangeNotifier {
     await prefs.setString('auth_token', token);
     await prefs.setString('user_data', jsonEncode(user));
 
-    print('✅ Token guardado: $token');
-    print('✅ Usuario guardado: $user');
-
     notifyListeners();
   }
 
@@ -69,7 +61,6 @@ class AuthService with ChangeNotifier {
     await prefs.remove('auth_token');
     await prefs.remove('user_data');
 
-    print('🚪 Sesión cerrada y datos eliminados');
     notifyListeners();
   }
 }

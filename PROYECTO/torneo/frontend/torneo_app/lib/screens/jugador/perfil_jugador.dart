@@ -6,13 +6,44 @@ import 'package:torneo_app/services/auth_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'package:intl/intl.dart';
 
-class PerfilJugadorScreen extends StatelessWidget {
+class PerfilJugadorScreen extends StatefulWidget {
   final Map<String, dynamic> user;
 
   const PerfilJugadorScreen({super.key, required this.user});
 
   @override
+  State<PerfilJugadorScreen> createState() => _PerfilJugadorScreenState();
+}
+
+class _PerfilJugadorScreenState extends State<PerfilJugadorScreen> {
+  bool _loadingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAuth();
+  }
+
+  Future<void> _initAuth() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (authService.token == null) {
+      // Si no hay token, redirigir al login
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+    setState(() {
+      _loadingAuth = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_loadingAuth) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Mi Perfil - Jugador'),
@@ -41,12 +72,12 @@ class PerfilJugadorScreen extends StatelessWidget {
               ),
               SizedBox(height: 15),
               Text(
-                user['name'] ?? 'Jugador',
+                widget.user['name'] ?? 'Jugador',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 5),
               Text(
-                user['email'] ?? '',
+                widget.user['email'] ?? '',
                 style: TextStyle(color: Constants.textColor),
               ),
               SizedBox(height: 10),
@@ -72,7 +103,7 @@ class PerfilJugadorScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.credit_card, size: 18, color: Constants.primaryColor),
                           SizedBox(width: 8),
-                          Text('Identificación: ${user['cedula'] ?? 'No registrada'}'),
+                          Text('Identificación: ${widget.user['cedula'] ?? 'No registrada'}'),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -80,7 +111,7 @@ class PerfilJugadorScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.sports, size: 18, color: Constants.primaryColor),
                           SizedBox(width: 8),
-                          Text('Posición: ${user['position'] ?? 'No especificada'}'),
+                          Text('Posición: ${widget.user['position'] ?? 'No especificada'}'),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -88,7 +119,7 @@ class PerfilJugadorScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.tag_faces, size: 18, color: Constants.primaryColor),
                           SizedBox(width: 8),
-                          Text('Camiseta: #${user['jerseyNumber'] ?? '0'}'),
+                          Text('Camiseta: #${widget.user['jerseyNumber'] ?? '0'}'),
                         ],
                       ),
                     ],
@@ -188,25 +219,6 @@ class PerfilJugadorScreen extends StatelessWidget {
                   );
                 },
               ),
-
-              SizedBox(height: 30),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final authService = Provider.of<AuthService>(context, listen: false);
-                  await authService.logout();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Sesión cerrada')),
-                  );
-                  Navigator.pushReplacementNamed(context, '/');
-                },
-                icon: Icon(Icons.exit_to_app),
-                label: Text('Cerrar sesión'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Constants.primaryColor,
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
             ],
           ),
         ),
@@ -216,8 +228,8 @@ class PerfilJugadorScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             UserAccountsDrawerHeader(
-              accountName: Text(user['name'] ?? 'Jugador'),
-              accountEmail: Text(user['email'] ?? ''),
+              accountName: Text(widget.user['name'] ?? 'Jugador'),
+              accountEmail: Text(widget.user['email'] ?? ''),
               currentAccountPicture: CircleAvatar(
                 child: Icon(Icons.person),
               ),
@@ -235,8 +247,7 @@ class PerfilJugadorScreen extends StatelessWidget {
               title: Text('Mis Torneos'),
               onTap: () {
                 Navigator.pop(context);
-                // ✅ Pasa el usuario completo (con cedula)
-                Navigator.pushNamed(context, '/mis_torneos', arguments: user);
+                Navigator.pushNamed(context, '/mis_torneos', arguments: widget.user);
               },
             ),
             ListTile(
@@ -244,7 +255,6 @@ class PerfilJugadorScreen extends StatelessWidget {
               title: Text('Calendario'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Ir a calendario personalizado
               },
             ),
             Divider(),

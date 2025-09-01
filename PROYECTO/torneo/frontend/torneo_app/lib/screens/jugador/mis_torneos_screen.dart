@@ -74,23 +74,35 @@ class MisTorneosScreen extends StatelessWidget {
   }
 
   Future<List<Map<String, dynamic>>> _cargarTorneosInscritos() async {
-    try {
-      final cedula = user['cedula']?.toString() ?? '';
-      if (cedula.isEmpty) {
-        print('❌ Cédula no disponible en el usuario');
-        return [];
-      }
-
-      final response = await ApiService.get('/equipos/jugador/$cedula/torneos');
-      if (response.statusCode == 200 && response.data is Map && response.data.containsKey('torneos')) {
-        return response.data['torneos'].cast<Map<String, dynamic>>();
-      }
-      return [];
-    } on Exception catch (e) {
-      print('❌ Error al cargar torneos inscritos: $e');
+  try {
+    final cedula = user['cedula']?.toString() ?? '';
+    if (cedula.isEmpty) {
+      print('❌ Cédula no disponible');
       return [];
     }
+
+    print('🔍 Buscando torneos para cédula: $cedula');
+
+    final response = await ApiService.get('/equipos/jugador/$cedula/torneos');
+    print('✅ Respuesta completa: ${response.data}'); // ✅ Ver todo
+
+    if (response.statusCode == 200 && response.data is Map && response.data.containsKey('torneos')) {
+      final torneos = response.data['torneos'];
+      if (torneos is List && torneos.isNotEmpty) {
+        return torneos.cast<Map<String, dynamic>>();
+      } else {
+        print('⚠️ Lista de torneos vacía');
+        return [];
+      }
+    } else {
+      print('❌ No se encontraron torneos inscritos');
+      return [];
+    }
+  } on Exception catch (e) {
+    print('❌ Error al cargar torneos: $e');
+    return [];
   }
+}
 
   Color _getColorPorEstado(String? estado) {
     switch (estado?.toLowerCase()) {

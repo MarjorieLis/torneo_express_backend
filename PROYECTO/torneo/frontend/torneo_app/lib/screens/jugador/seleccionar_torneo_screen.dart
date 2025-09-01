@@ -17,7 +17,6 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
   @override
   void initState() {
     super.initState();
-    print('🔧 Prueba: ${capitalize("voleibol")}');
     _cargarTorneos();
   }
 
@@ -40,7 +39,7 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
         torneos = data.cast<Map<String, dynamic>>();
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar torneos: $e')),
@@ -59,94 +58,104 @@ class _SeleccionarTorneoScreenState extends State<SeleccionarTorneoScreen> {
           ? Center(child: CircularProgressIndicator())
           : torneos.isEmpty
               ? Center(child: Text('No hay torneos disponibles'))
-              : ListView.builder(
-                  padding: EdgeInsets.all(10),
-                  itemCount: torneos.length,
-                  itemBuilder: (context, index) {
-                    final torneo = torneos[index];
-                    final inicio = _parseFecha(torneo['fechaInicio']);
-                    final fin = _parseFecha(torneo['fechaFin']);
-                    final int maxEquipos = torneo['maxEquipos'] ?? 0;
-                    final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
-                    final int equiposRestantes = maxEquipos - equiposRegistrados;
-                    final String? categoria = torneo['categoria'];
+              : RefreshIndicator(
+                  onRefresh: _cargarTorneos,
+                  child: ListView.builder(
+                    padding: EdgeInsets.all(10),
+                    itemCount: torneos.length,
+                    itemBuilder: (context, index) {
+                      final torneo = torneos[index];
+                      final inicio = _parseFecha(torneo['fechaInicio']);
+                      final fin = _parseFecha(torneo['fechaFin']);
+                      final int maxEquipos = torneo['maxEquipos'] ?? 0;
+                      final int equiposRegistrados = torneo['equiposRegistrados'] ?? 0;
+                      final int equiposRestantes = maxEquipos - equiposRegistrados;
+                      final String? categoria = torneo['categoria'];
 
-                    return Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              torneo['nombre'] ?? 'Sin nombre',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 5),
-                            Text('Disciplina: ${capitalize(torneo['disciplina'])}'),
-                            Text('Equipos: $equiposRegistrados / $maxEquipos'),
-                            if (equiposRestantes > 0)
-                              Text('Restantes: $equiposRestantes', style: TextStyle(color: Colors.green))
-                            else
-                              Text('¡Lleno!', style: TextStyle(color: Colors.red)),
-                            Text(
-                              'Fechas: ${inicio != null ? DateFormat('dd/MM').format(inicio) : 'Inválida'} - ${fin != null ? DateFormat('dd/MM').format(fin) : 'Inválida'}',
-                            ),
-                            SizedBox(height: 10),
-                            if (categoria != null)
+                      return Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                'Categoría: ${capitalize(categoria)}',
-                                style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold),
-                              )
-                            else
+                                torneo['nombre'] ?? 'Sin nombre',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 5),
+                              Text('Disciplina: ${capitalize(torneo['disciplina'])}'),
+                              SizedBox(height: 5),
+                              Text('Equipos: $equiposRegistrados / $maxEquipos'),
+                              LinearProgressIndicator(
+                                value: maxEquipos > 0 ? equiposRegistrados / maxEquipos : 0,
+                                backgroundColor: Colors.grey[200],
+                                color: Constants.primaryColor,
+                              ),
+                              if (equiposRestantes > 0)
+                                Text('Restantes: $equiposRestantes', style: TextStyle(color: Colors.green))
+                              else
+                                Text('¡Lleno!', style: TextStyle(color: Colors.red)),
+                              SizedBox(height: 5),
                               Text(
-                                'Categoría: No definida',
-                                style: TextStyle(color: Colors.orange),
+                                'Fechas: ${inicio != null ? DateFormat('dd/MM').format(inicio) : 'Inválida'} - ${fin != null ? DateFormat('dd/MM').format(fin) : 'Inválida'}',
                               ),
-                            SizedBox(height: 10),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _getColorPorEstado(torneo['estado']),
-                                borderRadius: BorderRadius.circular(12),
+                              SizedBox(height: 10),
+                              if (categoria != null)
+                                Text(
+                                  'Categoría: ${capitalize(categoria)}',
+                                  style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold),
+                                )
+                              else
+                                Text(
+                                  'Categoría: No definida',
+                                  style: TextStyle(color: Colors.orange),
+                                ),
+                              SizedBox(height: 10),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _getColorPorEstado(torneo['estado']),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  torneo['estado'].toUpperCase(),
+                                  style: TextStyle(color: Colors.white, fontSize: 12),
+                                ),
                               ),
-                              child: Text(
-                                torneo['estado'].toUpperCase(),
-                                style: TextStyle(color: Colors.white, fontSize: 12),
+                              SizedBox(height: 15),
+                              ElevatedButton.icon(
+                                onPressed: equiposRestantes <= 0 || torneo['estado'] != 'activo'
+                                    ? null
+                                    : () async {
+                                        final result = await Navigator.pushNamed(context, '/inscribir_equipo', arguments: torneo);
+                                        if (result != null && result is Map<String, dynamic>) {
+                                          // ✅ Actualizar el torneo en la lista
+                                          final index = torneos.indexWhere((t) => t['_id'] == result['_id']);
+                                          if (index != -1) {
+                                            setState(() {
+                                              torneos[index] = result;
+                                            });
+                                          } else {
+                                            // ✅ Recargar todos si no se encontró
+                                            await _cargarTorneos();
+                                          }
+                                        }
+                                      },
+                                icon: Icon(Icons.add_circle),
+                                label: Text('Inscribir Equipo'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Constants.primaryColor,
+                                  disabledBackgroundColor: Colors.grey,
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 15),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final result = await Navigator.pushNamed(context, '/inscribir_equipo', arguments: torneo);
-                                if (result != null && result is Map<String, dynamic>) {
-                                  if (result.containsKey('torneos')) {
-                                    setState(() {
-                                      torneos = List<Map<String, dynamic>>.from(result['torneos']);
-                                    });
-                                  } else {
-                                    final updatedTorneo = result;
-                                    final index = torneos.indexWhere((t) => t['_id'] == updatedTorneo['_id']);
-                                    if (index != -1) {
-                                      setState(() {
-                                        torneos[index] = updatedTorneo;
-                                      });
-                                    }
-                                  }
-                                }
-                              },
-                              icon: Icon(Icons.add_circle),
-                              label: Text('Inscribir Equipo'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Constants.primaryColor,
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
     );
   }

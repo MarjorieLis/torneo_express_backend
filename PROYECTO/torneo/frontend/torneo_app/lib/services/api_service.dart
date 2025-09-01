@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static final Dio _dio = Dio();
 
+  // ✅ Usa la IP correcta del servidor
   static const String baseUrl = 'http://192.168.0.5:5000/api';
 
   static void init() {
@@ -21,7 +22,7 @@ class ApiService {
         onRequest: (options, handler) async {
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString('auth_token');
-          print('🔍 Enviando token en header: $token');
+          print('🔐 Enviando token: $token');
 
           if (token != null) {
             options.headers['x-auth-token'] = token;
