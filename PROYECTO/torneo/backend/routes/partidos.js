@@ -218,4 +218,43 @@ router.post('/automatico', auth, async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/partidos/:id/registrar-resultado - Registrar resultado de un partido
+ */
+router.put('/:id/registrar-resultado', auth, async (req, res) => {
+  const { id } = req.params;
+  const { puntosLocal, puntosVisitante } = req.body;
+
+  try {
+    const partido = await Partido.findById(id);
+    if (!partido) {
+      return res.status(404).json({ msg: 'Partido no encontrado' });
+    }
+
+    // Actualizar resultado
+    partido.resultado.puntosLocal = puntosLocal;
+    partido.resultado.puntosVisitante = puntosVisitante;
+    partido.estado = 'jugado';
+
+    // Determinar ganador
+    if (puntosLocal > puntosVisitante) {
+      partido.resultado.ganador = partido.equipoLocal;
+    } else if (puntosVisitante > puntosLocal) {
+      partido.resultado.ganador = partido.equipoVisitante;
+    } else {
+      partido.resultado.ganador = null; // Empate
+    }
+
+    await partido.save();
+
+    res.json({
+      msg: 'Resultado registrado correctamente',
+      partido
+    });
+  } catch (err) {
+    console.error('❌ Error al registrar resultado:', err.message);
+    res.status(500).send('Error en el servidor');
+  }
+});
+
 module.exports = router;

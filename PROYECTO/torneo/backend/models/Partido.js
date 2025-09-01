@@ -43,14 +43,14 @@ const partidoSchema = new mongoose.Schema({
     puntosVisitante: { type: Number, default: 0 },
     ganador: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipo' }
   },
-  disciplina: { // ✅ Agregar disciplina
+  disciplina: {
     type: String,
     required: true,
     default: 'baloncesto'
   },
-  nombreTorneo: { // ✅ Agregar nombre del torneo
+  nombreTorneo: {
     type: String,
-    required: true
+    // ✅ Cambiar de required: true a optional
   }
 }, { timestamps: true });
 
