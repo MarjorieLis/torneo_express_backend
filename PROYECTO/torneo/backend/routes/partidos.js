@@ -143,11 +143,11 @@ router.put('/:id/registrar-resultado', auth, async (req, res) => {
     partido.resultado.puntosVisitante = puntosVisitante;
     partido.estado = 'jugado';
 
-    // Determinar ganador
+    // ✅ Determinar ganador correctamente
     if (puntosLocal > puntosVisitante) {
-      partido.resultado.ganador = partido.equipoLocal;
+      partido.resultado.ganador = partido.equipoLocal; // ✅ Equipo local ganó
     } else if (puntosVisitante > puntosLocal) {
-      partido.resultado.ganador = partido.equipoVisitante;
+      partido.resultado.ganador = partido.equipoVisitante; // ✅ Equipo visitante ganó
     } else {
       partido.resultado.ganador = null; // Empate
     }
@@ -160,6 +160,45 @@ router.put('/:id/registrar-resultado', auth, async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Error al registrar resultado:', err.message);
+    res.status(500).send('Error en el servidor');
+  }
+});
+
+/**
+ * GET /api/partidos/jugador/:cedula - Obtener partidos del jugador
+ */
+router.get('/jugador/:cedula', auth, async (req, res) => {
+  try {
+    const { cedula } = req.params;
+
+    // Buscar equipo donde el jugador esté (como capitán o en jugadores)
+    const equipo = await Equipo.findOne({
+      $or: [
+        { 'capitán.cedula': cedula },
+        { 'jugadores.cedula': cedula }
+      ]
+    });
+
+    if (!equipo) {
+      return res.json({ partidos: [] });
+    }
+
+    // Obtener partidos donde el equipo sea local o visitante
+    const partidos = await Partido.find({
+      $or: [
+        { equipoLocal: equipo._id },
+        { equipoVisitante: equipo._id }
+      ]
+    })
+      .populate('equipoLocal', 'nombre')
+      .populate('equipoVisitante', 'nombre')
+      .populate('torneo', 'nombre')
+      .populate('resultado.ganador')
+      .sort({ fecha: 1, hora: 1 });
+
+    res.json({ partidos });
+  } catch (err) {
+    console.error('❌ Error al obtener partidos del jugador:', err.message);
     res.status(500).send('Error en el servidor');
   }
 });

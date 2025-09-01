@@ -1,5 +1,6 @@
 // backend/controllers/authController.js
 const User = require('../models/User');
+const Equipo = require('../models/Equipo');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -48,8 +49,23 @@ exports.register = async (req, res) => {
     // Guardar en la base de datos
     await user.save();
 
+    // ✅ Buscar equipo donde el jugador sea capitán o esté en jugadores
+    let equipo = await Equipo.findOne({
+      $or: [
+        { 'capitán.cedula': user.cedula },
+        { 'jugadores.cedula': user.cedula }
+      ]
+    }).select('_id nombre');
+
     // Generar token JWT
-    const payload = { user: { id: user.id, role: user.role } };
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role,
+        ...(equipo && { equipoId: equipo._id }) // ✅ Solo si tiene equipo
+      } 
+    };
+
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -71,6 +87,7 @@ exports.register = async (req, res) => {
             jerseyNumber: user.jerseyNumber,
             cedula: user.cedula,
             profilePhoto: user.profilePhoto,
+            ...(equipo && { equipoId: equipo._id.toString() }) // ✅ Enviar al frontend
           },
         });
       }
@@ -105,8 +122,23 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: 'Credenciales inválidas' });
     }
 
+    // ✅ Buscar equipo donde el jugador sea capitán o esté en jugadores
+    let equipo = await Equipo.findOne({
+      $or: [
+        { 'capitán.cedula': user.cedula },
+        { 'jugadores.cedula': user.cedula }
+      ]
+    }).select('_id nombre');
+
     // Generar token JWT
-    const payload = { user: { id: user.id, role: user.role } };
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role,
+        ...(equipo && { equipoId: equipo._id }) // ✅ Solo si tiene equipo
+      } 
+    };
+
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -128,6 +160,7 @@ exports.login = async (req, res) => {
             jerseyNumber: user.jerseyNumber,
             cedula: user.cedula,
             profilePhoto: user.profilePhoto,
+            ...(equipo && { equipoId: equipo._id.toString() }) // ✅ Enviar al frontend
           },
         });
       }
