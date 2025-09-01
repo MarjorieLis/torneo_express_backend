@@ -13,6 +13,7 @@ import 'screens/jugador/seleccionar_torneo_screen.dart';
 import 'screens/jugador/inscribir_equipo_screen.dart';
 import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos;
 import 'package:torneo_app/screens/organizador/gestionar_equipos_screen.dart';
+import 'package:torneo_app/screens/organizador/programar_partidos_screen.dart';
 
 // ✅ Importa explícitamente las pantallas del jugador
 import 'package:torneo_app/screens/jugador/perfil_jugador.dart';
@@ -94,8 +95,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(), // ✅ Quitado 'const'
+        '/login': (context) => LoginScreen(), // ✅ Quitado 'const'
         '/perfil_jugador': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return PerfilJugadorScreen(user: user ?? {});
@@ -104,18 +105,19 @@ class MyApp extends StatelessWidget {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return PerfilOrganizadorScreen(user: user ?? {});
         },
-        '/crear_torneo': (context) => CrearTorneoScreen(),
-        '/seleccionar_torneo': (context) => SeleccionarTorneoScreen(),
+        '/crear_torneo': (context) => CrearTorneoScreen(), // ✅ Quitado 'const'
+        '/seleccionar_torneo': (context) => SeleccionarTorneoScreen(), // ✅ Quitado 'const'
         '/inscribir_equipo': (context) {
           final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return InscribirEquipoScreen(torneo: torneo ?? {});
         },
-        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(),
-        '/gestionar_equipos': (context) => GestionarEquiposScreen(),
+        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(), // ✅ Quitado 'const'
+        '/gestionar_equipos': (context) => GestionarEquiposScreen(), // ✅ Quitado 'const'
         '/mis_torneos': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return MisTorneosScreen(user: user ?? {});
         },
+        '/programar_partidos': (context) => ProgramarPartidosScreen(), // ✅ Quitado 'const'
       },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

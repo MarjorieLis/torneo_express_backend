@@ -5,6 +5,7 @@ import 'package:torneo_app/services/auth_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'crear_torneo_screen.dart';
 import 'lista_torneos_screen.dart'; // Asegúrate de tener este archivo
+import 'programar_partidos_screen.dart'; // ✅ Nuevo: pantalla para programar partidos
 
 class PerfilOrganizadorScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -101,7 +102,7 @@ class PerfilOrganizadorScreen extends StatelessWidget {
 
             SizedBox(height: 30),
 
-            // Botón para crear torneo
+            // Botones
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/crear_torneo');
@@ -115,18 +116,36 @@ class PerfilOrganizadorScreen extends StatelessWidget {
               ),
             ),
 
+            SizedBox(height: 10),
+
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/gestionar_equipos');
-                },
-                icon: Icon(Icons.group),
-                label: Text('Gestionar Equipos'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Constants.primaryColor,
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              },
+              icon: Icon(Icons.group),
+              label: Text('Gestionar Equipos'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Constants.primaryColor,
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
 
-),
-),
+            SizedBox(height: 10),
+
+            // ✅ Nuevo: Botón para programar partidos
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/programar_partidos');
+              },
+              icon: Icon(Icons.calendar_today),
+              label: Text('Programar Partidos'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Constants.primaryColor,
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ],
         ),
       ),
