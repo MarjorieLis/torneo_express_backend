@@ -16,8 +16,7 @@ import 'package:torneo_app/screens/organizador/gestionar_equipos_screen.dart';
 import 'package:torneo_app/screens/organizador/programar_partidos_screen.dart';
 import 'package:torneo_app/screens/organizador/partidos_programados_screen.dart'; // ✅ Nueva pantalla
 import 'package:torneo_app/screens/organizador/historial_partidos_screen.dart';
-
-
+import 'package:torneo_app/screens/jugador/calendario_jugador_screen.dart';
 
 // ✅ Importa explícitamente las pantallas del jugador
 import 'package:torneo_app/screens/jugador/perfil_jugador.dart';
@@ -124,6 +123,11 @@ class MyApp extends StatelessWidget {
         '/programar_partidos': (context) => ProgramarPartidosScreen(),
         '/partidos_programados': (context) => PartidosProgramadosScreen(),
         '/historial_partidos': (context) => HistorialPartidosScreen(),
+        // ✅ Corregido: user se recibe como argumento
+        '/calendario_jugador': (context) {
+          final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return CalendarioJugadorScreen(user: user ?? {});
+        },
       },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

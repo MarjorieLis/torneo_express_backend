@@ -27,7 +27,6 @@ class _PerfilJugadorScreenState extends State<PerfilJugadorScreen> {
   Future<void> _initAuth() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     if (authService.token == null) {
-      // Si no hay token, redirigir al login
       Navigator.pushReplacementNamed(context, '/login');
       return;
     }
@@ -250,11 +249,13 @@ class _PerfilJugadorScreenState extends State<PerfilJugadorScreen> {
                 Navigator.pushNamed(context, '/mis_torneos', arguments: widget.user);
               },
             ),
+            // ✅ Calendario en el menú lateral
             ListTile(
               leading: Icon(Icons.event),
-              title: Text('Calendario'),
+              title: Text('Mi Calendario'),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.pushNamed(context, '/calendario_jugador', arguments: widget.user);
               },
             ),
             Divider(),
