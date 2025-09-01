@@ -149,7 +149,7 @@ class PerfilOrganizadorScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/partidos_programados');
               },
               icon: Icon(Icons.calendar_today),
-              label: Text('Partidos Programados'),
+              label: Text('Programar Partidos'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Constants.primaryColor,
                 padding: EdgeInsets.symmetric(vertical: 12),
