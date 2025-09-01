@@ -143,12 +143,12 @@ class PerfilOrganizadorScreen extends StatelessWidget {
 
             SizedBox(height: 10),
 
-            // ✅ Nuevo: Botón para ver partidos programados
+            /// ✅ Botón: "Programar Partidos" → /programar_partidos
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/partidos_programados');
+                Navigator.pushNamed(context, '/programar_partidos'); // ✅ Correcto
               },
-              icon: Icon(Icons.calendar_today),
+              icon: Icon(Icons.autorenew),
               label: Text('Programar Partidos'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Constants.primaryColor,
