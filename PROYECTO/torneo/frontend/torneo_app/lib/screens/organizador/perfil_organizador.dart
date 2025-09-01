@@ -5,7 +5,8 @@ import 'package:torneo_app/services/auth_service.dart';
 import 'package:torneo_app/utils/constants.dart';
 import 'crear_torneo_screen.dart';
 import 'lista_torneos_screen.dart'; // Asegúrate de tener este archivo
-import 'programar_partidos_screen.dart'; // ✅ Nuevo: pantalla para programar partidos
+import 'gestionar_equipos_screen.dart';
+import 'programar_partidos_screen.dart';
 
 class PerfilOrganizadorScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -48,6 +49,15 @@ class PerfilOrganizadorScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/lista_torneos');
               },
             ),
+            ListTile(
+              leading: Icon(Icons.calendar_today),
+              title: Text('Partidos Programados'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/partidos_programados');
+              },
+            ),
+            
             ListTile(
               leading: Icon(Icons.exit_to_app),
               title: Text('Cerrar sesión'),
@@ -102,7 +112,7 @@ class PerfilOrganizadorScreen extends StatelessWidget {
 
             SizedBox(height: 30),
 
-            // Botones
+            // Botones (permanecen en el body)
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pushNamed(context, '/crear_torneo');
@@ -133,13 +143,13 @@ class PerfilOrganizadorScreen extends StatelessWidget {
 
             SizedBox(height: 10),
 
-            // ✅ Nuevo: Botón para programar partidos
+            // ✅ Nuevo: Botón para ver partidos programados
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/programar_partidos');
+                Navigator.pushNamed(context, '/partidos_programados');
               },
               icon: Icon(Icons.calendar_today),
-              label: Text('Programar Partidos'),
+              label: Text('Partidos Programados'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Constants.primaryColor,
                 padding: EdgeInsets.symmetric(vertical: 12),

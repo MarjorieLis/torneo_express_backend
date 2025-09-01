@@ -14,6 +14,7 @@ import 'screens/jugador/inscribir_equipo_screen.dart';
 import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos;
 import 'package:torneo_app/screens/organizador/gestionar_equipos_screen.dart';
 import 'package:torneo_app/screens/organizador/programar_partidos_screen.dart';
+import 'package:torneo_app/screens/organizador/partidos_programados_screen.dart'; // ✅ Nueva pantalla
 
 // ✅ Importa explícitamente las pantallas del jugador
 import 'package:torneo_app/screens/jugador/perfil_jugador.dart';
@@ -95,8 +96,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthScreen(),
-        '/register': (context) => RegisterScreen(), // ✅ Quitado 'const'
-        '/login': (context) => LoginScreen(), // ✅ Quitado 'const'
+        '/register': (context) => RegisterScreen(),
+        '/login': (context) => LoginScreen(),
         '/perfil_jugador': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return PerfilJugadorScreen(user: user ?? {});
@@ -105,19 +106,20 @@ class MyApp extends StatelessWidget {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return PerfilOrganizadorScreen(user: user ?? {});
         },
-        '/crear_torneo': (context) => CrearTorneoScreen(), // ✅ Quitado 'const'
-        '/seleccionar_torneo': (context) => SeleccionarTorneoScreen(), // ✅ Quitado 'const'
+        '/crear_torneo': (context) => CrearTorneoScreen(),
+        '/seleccionar_torneo': (context) => SeleccionarTorneoScreen(),
         '/inscribir_equipo': (context) {
           final torneo = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return InscribirEquipoScreen(torneo: torneo ?? {});
         },
-        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(), // ✅ Quitado 'const'
-        '/gestionar_equipos': (context) => GestionarEquiposScreen(), // ✅ Quitado 'const'
+        '/lista_torneos': (context) => lista_torneos.ListaTorneosScreen(),
+        '/gestionar_equipos': (context) => GestionarEquiposScreen(),
         '/mis_torneos': (context) {
           final user = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
           return MisTorneosScreen(user: user ?? {});
         },
-        '/programar_partidos': (context) => ProgramarPartidosScreen(), // ✅ Quitado 'const'
+        '/programar_partidos': (context) => ProgramarPartidosScreen(),
+        '/partidos_programados': (context) => PartidosProgramadosScreen(), // ✅ Nueva ruta
       },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
@@ -152,7 +154,6 @@ class AuthScreen extends StatelessWidget {
               'assets/logo_uide.png',
               height: 120,
               width: 120,
-              color: Colors.white,
             ),
             const SizedBox(height: 20),
             Text(
