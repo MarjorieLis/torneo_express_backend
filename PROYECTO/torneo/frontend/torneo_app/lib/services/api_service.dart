@@ -6,7 +6,7 @@ class ApiService {
   static final Dio _dio = Dio();
 
   // ✅ Usa la IP correcta del servidor
-  static const String baseUrl = 'http://192.168.0.5:5000/api';
+  static const String baseUrl = 'http://192.168.0.9:5000/api';
 
   static void init() {
     _dio.options

@@ -48,6 +48,7 @@ class AuthService with ChangeNotifier {
     await prefs.setString('auth_token', token);
     await prefs.setString('user_data', jsonEncode(user));
 
+    // ✅ Notificar a los listeners
     notifyListeners();
   }
 

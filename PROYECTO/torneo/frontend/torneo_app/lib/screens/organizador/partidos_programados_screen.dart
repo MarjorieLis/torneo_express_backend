@@ -21,8 +21,16 @@ class _PartidosProgramadosScreenState extends State<PartidosProgramadosScreen> {
 
   Future<void> _cargarPartidos() async {
     try {
+      // ✅ Asegúrate de que el endpoint sea correcto
       final response = await ApiService.get('/partidos');
-      if (response.statusCode == 200 && response.data is List) {
+      if (response.statusCode == 200 && response.data is Map) {
+        final data = response.data;
+        if (data.containsKey('partidos')) {
+          setState(() {
+            partidos = List<Map<String, dynamic>>.from(data['partidos']);
+          });
+        }
+      } else if (response.data is List) {
         setState(() {
           partidos = response.data.cast<Map<String, dynamic>>();
         });
@@ -55,6 +63,15 @@ class _PartidosProgramadosScreenState extends State<PartidosProgramadosScreen> {
                     final fecha = DateTime.tryParse(partido['fecha'] ?? '');
                     final hora = partido['hora'];
 
+                    // ✅ Extraer nombres de los equipos
+                    final equipoLocalNombre = partido['equipoLocal'] is Map
+                        ? partido['equipoLocal']['nombre'] ?? 'Desconocido'
+                        : 'Desconocido';
+
+                    final equipoVisitanteNombre = partido['equipoVisitante'] is Map
+                        ? partido['equipoVisitante']['nombre'] ?? 'Desconocido'
+                        : 'Desconocido';
+
                     return Card(
                       child: Padding(
                         padding: EdgeInsets.all(15),
@@ -74,14 +91,14 @@ class _PartidosProgramadosScreenState extends State<PartidosProgramadosScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Equipo Local: ${partido['equipoLocalNombre'] ?? 'Desconocido'}',
+                                    'Equipo Local: $equipoLocalNombre',
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    'Equipo Visitante: ${partido['equipoVisitanteNombre'] ?? 'Desconocido'}',
+                                    'Equipo Visitante: $equipoVisitanteNombre',
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
