@@ -10,17 +10,22 @@ connectDB();
 
 const app = express();
 
-// Middleware
+// ✅ Configuración de CORS más segura y funcional
 app.use(cors({
-  origin: '*' // ✅ Permite cualquier origen (ajusta en producción)
+  origin: 'http://192.168.0.5:5000', // ✅ Ajusta según tu IP real
+  credentials: true, // ✅ Necesario para enviar cookies o headers personalizados
+  exposedHeaders: ['x-auth-token'] // ✅ Permite que el frontend lea el token si se devuelve
 }));
-app.use(express.json());
+
+// Middleware
+app.use(express.json({ limit: '10mb' })); // ✅ Soporta payloads grandes
 
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/torneos', require('./routes/torneos'));
 app.use('/api/equipos', require('./routes/equipos'));
 app.use('/api/jugadores', require('./routes/jugadores'));
+
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('API de Torneo UIDE funcionando ✅');
@@ -32,7 +37,7 @@ const PORT = process.env.PORT || 5000;
 // ✅ Iniciar servidor con manejo de errores
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor corriendo en el puerto ${PORT} (0.0.0.0)`);
-  console.log(`📡 Accesible desde el emulador como: http://10.0.2.2:${PORT}`);
+  console.log(`📡 Accesible desde dispositivos como: http://192.168.0.5:${PORT}`);
 });
 
 // ✅ Manejo de errores del servidor

@@ -18,9 +18,10 @@ const equipoSchema = new mongoose.Schema({
     required: true,
     enum: ['fútbol', 'baloncesto', 'voleibol', 'tenis']
   },
-  torneo: {
+  torneo: { // ✅ Cambiado de torneoId a torneo
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Torneo'
+    ref: 'Torneo',
+    required: true
   },
   capitán: {
     nombre: { type: String, required: true },

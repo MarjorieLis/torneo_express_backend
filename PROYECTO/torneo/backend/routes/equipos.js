@@ -1,16 +1,25 @@
-// backend/routes/equipos.js
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
+const mongoose = require('mongoose');
 const Equipo = require('../models/Equipo');
 const Torneo = require('../models/Torneo');
 
 /**
  * POST /api/equipos - RF-002: Registrar equipo
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { nombre, disciplina, capitán, cedulaCapitan, jugadores, torneoId } = req.body;
 
   try {
+    // ✅ Validar que torneoId sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(torneoId)) {
+      return res.status(400).json({ msg: 'ID de torneo inválido' });
+    }
+
+    // ✅ Convertir a ObjectId
+    const torneoObjectId = new mongoose.Types.ObjectId(torneoId);
+
     // ✅ Validar nombre único
     const existeEquipo = await Equipo.findOne({ nombre });
     if (existeEquipo) {
@@ -19,7 +28,6 @@ router.post('/', async (req, res) => {
 
     // ✅ Crear lista de jugadores que incluya al capitán
     let jugadoresConCapitan = [...(jugadores || [])];
-
     const yaEstaEnLista = jugadoresConCapitan.some(j => j.cedula === cedulaCapitan);
     if (!yaEstaEnLista) {
       jugadoresConCapitan.push({
@@ -36,7 +44,7 @@ router.post('/', async (req, res) => {
 
     // ✅ Buscar si alguna cédula ya está en otro equipo
     const equiposExistentes = await Equipo.find({
-      torneoId,
+      torneo: torneoObjectId,
       $or: [
         { 'capitán.cedula': { $in: cedulasNuevas } },
         { 'jugadores.cedula': { $in: cedulasNuevas } }
@@ -55,11 +63,11 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // ✅ Crear nuevo equipo
+    // ✅ Crear nuevo equipo con torneo como ObjectId
     const nuevoEquipo = new Equipo({
       nombre,
       disciplina,
-      torneoId,
+      torneo: torneoObjectId,
       capitán,
       cedulaCapitan,
       jugadores: jugadoresConCapitan,
@@ -88,7 +96,7 @@ router.post('/', async (req, res) => {
 /**
  * PUT /api/equipos/:id/aprobar - RF-002: Aprobar equipo
  */
-router.put('/:id/aprobar', async (req, res) => {
+router.put('/:id/aprobar', auth, async (req, res) => {
   try {
     const equipo = await Equipo.findById(req.params.id);
     if (!equipo) {
@@ -103,8 +111,8 @@ router.put('/:id/aprobar', async (req, res) => {
     await equipo.save();
 
     // ✅ Incrementar equiposRegistrados
-    if (equipo.torneoId) {
-      await Torneo.findByIdAndUpdate(equipo.torneoId, {
+    if (equipo.torneo) {
+      await Torneo.findByIdAndUpdate(equipo.torneo, {
         $inc: { equiposRegistrados: 1 }
       }, { new: true });
     }
@@ -119,7 +127,7 @@ router.put('/:id/aprobar', async (req, res) => {
 /**
  * PUT /api/equipos/:id/rechazar - RF-002: Rechazar equipo
  */
-router.put('/:id/rechazar', async (req, res) => {
+router.put('/:id/rechazar', auth, async (req, res) => {
   try {
     const equipo = await Equipo.findById(req.params.id);
     if (!equipo) {
@@ -143,7 +151,7 @@ router.put('/:id/rechazar', async (req, res) => {
 /**
  * GET /api/equipos - Listar todos los equipos
  */
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const equipos = await Equipo.find().populate('torneo', 'nombre');
     res.json({ equipos });
@@ -156,17 +164,22 @@ router.get('/', async (req, res) => {
 /**
  * GET /api/equipos/jugador/:cedula/torneos
  */
-router.get('/jugador/:cedula/torneos', async (req, res) => {
+router.get('/jugador/:cedula/torneos', auth, async (req, res) => {
   try {
     const { cedula } = req.params;
 
+    console.log('🔍 Buscando cédula:', cedula);
+
+    // ✅ Búsqueda correcta: en capitán.cedula Y en jugadores.cedula
     const equipos = await Equipo.find({
       $or: [
         { 'capitán.cedula': cedula },
         { 'jugadores.cedula': cedula }
       ],
-      estado: 'aprobado'
+      estado: { $in: ['pendiente', 'aprobado'] }
     }).populate('torneo', 'nombre disciplina categoria estado fechaInicio fechaFin maxEquipos equiposRegistrados');
+
+    console.log('✅ Equipos encontrados:', equipos);
 
     if (!equipos || equipos.length === 0) {
       return res.status(404).json({ msg: 'No estás inscrito en ningún torneo' });
@@ -184,6 +197,7 @@ router.get('/jugador/:cedula/torneos', async (req, res) => {
 
     res.json({ torneos: Array.from(torneosMap.values()) });
   } catch (err) {
+    console.error('❌ Error en /jugador/:cedula/torneos:', err.message);
     res.status(500).send('Error interno del servidor');
   }
 });
