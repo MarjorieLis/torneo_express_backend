@@ -10,22 +10,22 @@ connectDB();
 
 const app = express();
 
-// ✅ Configuración de CORS más segura y funcional
+// ✅ Configuración de CORS
 app.use(cors({
-  origin: 'http://192.168.0.5:5000', // ✅ Ajusta según tu IP real
-  credentials: true, // ✅ Necesario para enviar cookies o headers personalizados
-  exposedHeaders: ['x-auth-token'] // ✅ Permite que el frontend lea el token si se devuelve
+  origin: 'http://192.168.0.5:5000',
+  credentials: true,
+  exposedHeaders: ['x-auth-token']
 }));
 
 // Middleware
-app.use(express.json({ limit: '10mb' })); // ✅ Soporta payloads grandes
+app.use(express.json({ limit: '10mb' }));
 
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/torneos', require('./routes/torneos'));
 app.use('/api/equipos', require('./routes/equipos'));
 app.use('/api/jugadores', require('./routes/jugadores'));
-
+app.use('/api/partidos', require('./routes/partidos'));
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.send('API de Torneo UIDE funcionando ✅');
@@ -34,13 +34,11 @@ app.get('/', (req, res) => {
 // Puerto
 const PORT = process.env.PORT || 5000;
 
-// ✅ Iniciar servidor con manejo de errores
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor corriendo en el puerto ${PORT} (0.0.0.0)`);
   console.log(`📡 Accesible desde dispositivos como: http://192.168.0.5:${PORT}`);
 });
 
-// ✅ Manejo de errores del servidor
 server.on('error', (error) => {
   if (error.code === 'EADDRINUSE') {
     console.error(`❌ Puerto ${PORT} ocupado. Cierra otras aplicaciones o cambia el puerto.`);
