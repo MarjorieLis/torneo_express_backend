@@ -15,6 +15,9 @@ import 'screens/organizador/lista_torneos_screen.dart' as lista_torneos;
 import 'package:torneo_app/screens/organizador/gestionar_equipos_screen.dart';
 import 'package:torneo_app/screens/organizador/programar_partidos_screen.dart';
 import 'package:torneo_app/screens/organizador/partidos_programados_screen.dart'; // ✅ Nueva pantalla
+import 'package:torneo_app/screens/organizador/historial_partidos_screen.dart';
+
+
 
 // ✅ Importa explícitamente las pantallas del jugador
 import 'package:torneo_app/screens/jugador/perfil_jugador.dart';
@@ -119,7 +122,8 @@ class MyApp extends StatelessWidget {
           return MisTorneosScreen(user: user ?? {});
         },
         '/programar_partidos': (context) => ProgramarPartidosScreen(),
-        '/partidos_programados': (context) => PartidosProgramadosScreen(), // ✅ Nueva ruta
+        '/partidos_programados': (context) => PartidosProgramadosScreen(),
+        '/historial_partidos': (context) => HistorialPartidosScreen(),
       },
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

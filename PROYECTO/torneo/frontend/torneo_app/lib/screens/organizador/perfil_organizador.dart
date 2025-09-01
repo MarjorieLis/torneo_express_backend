@@ -57,6 +57,15 @@ class PerfilOrganizadorScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/partidos_programados');
               },
             ),
+
+            ListTile(
+              leading: Icon(Icons.history),
+              title: Text('Historial de Partidos'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/historial_partidos');
+                },
+                ),
             
             ListTile(
               leading: Icon(Icons.exit_to_app),
